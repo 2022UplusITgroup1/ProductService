@@ -1,4 +1,4 @@
-package com.uplus.ProductService.controller.response;
+package com.uplus.productservice.controller.response;
 
 public class StatusCode {
     public static final int OK = 200;

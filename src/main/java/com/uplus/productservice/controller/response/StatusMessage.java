@@ -1,4 +1,4 @@
-package com.uplus.ProductService.controller.response;
+package com.uplus.productservice.controller.response;
 
 public class StatusMessage {
     public static final String READ_PRODUCT_DETAIL = "모바일 상품 상세내용 조회 성공";

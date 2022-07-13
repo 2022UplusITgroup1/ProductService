@@ -1,4 +1,4 @@
-package com.uplus.ProductService.controller.response;
+package com.uplus.productservice.controller.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
