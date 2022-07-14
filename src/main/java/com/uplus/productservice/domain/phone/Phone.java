@@ -70,5 +70,5 @@ public class Phone extends TimeStamp {
     @JsonIgnore
     @NotNull
     @Column(name = "is_deleted")
-    private boolean isDeleted;
+    private Integer isDeleted;
 }
