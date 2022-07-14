@@ -1,5 +1,6 @@
 package com.uplus.productservice.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.istack.NotNull;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,9 +17,11 @@ import java.time.LocalDateTime;
 @Getter
 @MappedSuperclass
 public abstract class TimeStamp {
+    @JsonIgnore
     @Column(name = "create_time")
     LocalDateTime createTime;
 
+    @JsonIgnore
     @Column(name = "modify_time")
     LocalDateTime modifyTime;
 }

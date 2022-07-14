@@ -1,5 +1,6 @@
 package com.uplus.productservice.domain.phone;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.istack.NotNull;
 import com.uplus.productservice.domain.TimeStamp;
 import lombok.*;
@@ -22,6 +23,7 @@ import javax.persistence.*;
 public class Phone extends TimeStamp {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonIgnore
     private Integer id;
 
     @NotNull
