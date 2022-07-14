@@ -28,4 +28,9 @@ public class Brand extends TimeStamp {
     @NotNull
     @Column(name = "name")
     private String name;
+
+    @JsonIgnore
+    @NotNull
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 }

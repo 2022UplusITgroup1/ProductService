@@ -62,4 +62,13 @@ public class Phone extends TimeStamp {
     @NotNull
     @Column(name = "price")
     private Integer price;
+
+    @NotNull
+    @Column(name = "sales")
+    private Integer sales;
+
+    @JsonIgnore
+    @NotNull
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 }

@@ -1,11 +1,9 @@
 package com.uplus.productservice.domain.phone;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.istack.NotNull;
 import com.uplus.productservice.domain.TimeStamp;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import javax.persistence.*;
 
@@ -21,10 +19,17 @@ import javax.persistence.*;
 @Table(name="phone_image", uniqueConstraints =
         {@UniqueConstraint(name = "unq_phone_image_on_img_path",
         columnNames = "img_path")})
+@ToString
 public class Images extends TimeStamp {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @JsonIgnore
     private Integer id;
+
+    @NotNull
+    @Column(name = "phone_id")
+    @JsonIgnore
+    private Integer phoneId;
 
     @NotNull
     @Column(name = "img_path")
@@ -37,4 +42,9 @@ public class Images extends TimeStamp {
     @NotNull
     @Column(name = "img_pos")
     private String imgPos;
+
+    @JsonIgnore
+    @NotNull
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 }

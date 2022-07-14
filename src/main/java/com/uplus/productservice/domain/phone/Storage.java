@@ -28,4 +28,9 @@ public class Storage extends TimeStamp {
     @NotNull
     @Column(name = "capability")
     private Integer capability;
+
+    @JsonIgnore
+    @NotNull
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 }
