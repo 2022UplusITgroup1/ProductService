@@ -3,10 +3,10 @@ server:
 
 spring:
   application:
-    name: ProductService
+    name: product
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/ushopdb?useSSL=FALSE&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/productdb?useSSL=FALSE&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=UTC
     username: root
     password: root
   jpa:
@@ -15,8 +15,14 @@ spring:
     properties:
       hibernate:
         show_sql: true
+        format_sql: true
 
 eureka:
+  instance:
+    lease-renewal-interval-in-seconds: 1
+    lease-expiration-duration-in-seconds: 2
+    prefer-ip-address: true
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.value}}
   client:
     fetch-registry: true
     register-with-eureka: true
