@@ -1,5 +1,9 @@
 package com.uplus.productservice.controller.response;
 
+////////////////////////////////////
+// Create Date: 2022.07.14        //
+// Create By: MYSEO              //
+///////////////////////////////////
 public class StatusCode {
     public static final int OK = 200;
     public static final int CREATED = 201;

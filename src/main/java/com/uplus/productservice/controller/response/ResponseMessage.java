@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
+////////////////////////////////////
+// Create Date: 2022.07.14        //
+// Create By: MYSEO              //
+///////////////////////////////////
 @Data
 @AllArgsConstructor
 @Builder
