@@ -11,4 +11,5 @@ import java.util.List;
 ///////////////////////////////////
 public interface PlanRepository extends JpaRepository<Plan, Integer> {
     List<Plan> findAllByNetworkSupportOrderById(String networkSupport);
+    Plan findByCode(String planCode);
 }

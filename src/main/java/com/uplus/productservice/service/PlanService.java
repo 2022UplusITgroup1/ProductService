@@ -19,4 +19,8 @@ public class PlanService {
     public List<Plan> getPlanList(String networkSupport) {
         return planRepository.findAllByNetworkSupportOrderById(networkSupport);
     }
+
+    public Plan getPlanDetail(String planCode) {
+        return planRepository.findByCode(planCode);
+    }
 }

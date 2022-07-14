@@ -57,4 +57,9 @@ public class Plan extends TimeStamp {
     @NotNull
     @Column(name = "share_data")
     private Integer shareData;
+
+    @JsonIgnore
+    @NotNull
+    @Column(name = "is_deleted")
+    private boolean isDeleted;
 }
