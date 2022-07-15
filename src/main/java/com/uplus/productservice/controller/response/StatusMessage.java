@@ -12,6 +12,8 @@ public class StatusMessage {
     public static final String READ_PLAN_SUMMARY = "요금제 리스트 조회 성공";
     public static final String NOT_FOUND_PRODUCT = "알맞은 결과를 찾을 수 없습니다";
 
+    public static final String UPDATED_SALES_COUNT = "상품 판매량 변경 성공";
+
     public static final String INTERNAL_SERVER_ERROR = "서버 내부 에러";
 
     public static final String DB_ERROR  = "데이터베이스 에러";

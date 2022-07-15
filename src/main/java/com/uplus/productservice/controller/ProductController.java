@@ -165,4 +165,23 @@ public class ProductController {
 
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COMPARE, phoneDetailDtos);
     }
+
+    @PutMapping("/sales/{code}")
+    public ResponseMessage updateSales(@PathVariable("code") final String phoneCode) {
+        // TODO Handle Exception ...
+        logger.info("get product code : " + phoneCode);
+
+        Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+        spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
+
+        Phone phoneInfo = phoneService.getPhoneDetail(spec);
+        if (phoneInfo == null)
+            throw new ItemIsDeletedException("선택하신 상품이 존재하지 않습니다.");
+
+        phoneInfo.setSales(phoneInfo.getSales()+1);
+
+        Phone phoneUpdateRes = phoneService.updateSalesCount(phoneInfo);
+
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.UPDATED_SALES_COUNT, phoneUpdateRes);
+    }
 }

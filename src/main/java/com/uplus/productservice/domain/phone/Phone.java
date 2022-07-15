@@ -65,6 +65,7 @@ public class Phone extends TimeStamp {
 
     @NotNull
     @Column(name = "sales")
+    @Setter
     private Integer sales;
 
     @JsonIgnore

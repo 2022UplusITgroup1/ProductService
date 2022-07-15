@@ -12,4 +12,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 ///////////////////////////////////
 public interface PhoneRepository extends JpaRepository<Phone, Integer>, JpaSpecificationExecutor<Phone> {
     Phone findByCode(Specification<Phone> spec);
+    //TEST
+    Phone findByCode(String phoneCode);
 }
