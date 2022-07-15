@@ -1,5 +1,6 @@
 package com.uplus.productservice.controller;
 
+import com.uplus.productservice.controller.request.PhoneCompareDto;
 import com.uplus.productservice.controller.response.PhoneDetailDto;
 import com.uplus.productservice.controller.response.ResponseMessage;
 import com.uplus.productservice.controller.response.StatusCode;
@@ -7,6 +8,8 @@ import com.uplus.productservice.controller.response.StatusMessage;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.plan.Plan;
 import com.uplus.productservice.domain.phone.Phone;
+import com.uplus.productservice.exception.ItemIsDeletedException;
+import com.uplus.productservice.exception.NoAvailableItemException;
 import com.uplus.productservice.repository.ProductSpecification;
 import com.uplus.productservice.service.PhoneService;
 import com.uplus.productservice.service.PlanService;
@@ -14,11 +17,9 @@ import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -135,5 +136,33 @@ public class ProductController {
 
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
+    }
+
+    @PostMapping("/compare")
+    public ResponseMessage comparePhones(@RequestBody List<PhoneCompareDto> compareList) {
+        // TODO Handle Exception ...
+        /**
+         * 비교 정보 : model code, selected_plan,
+         *           discount_type, network_support, color
+         *
+         */
+        if (compareList.isEmpty())
+            throw new NoAvailableItemException("비교할 대상이 없습니다");
+
+        List<PhoneDetailDto> phoneDetailDtos = new ArrayList<>();
+
+        for (PhoneCompareDto dto : compareList) {
+            Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+            spec = spec.and(ProductSpecification.equalPhoneCode(dto.getCode()));
+
+            Phone phoneInfo = phoneService.getPhoneDetail(spec);
+            if (phoneInfo == null)
+                throw new ItemIsDeletedException("선택하신 상품이 존재하지 않습니다.");
+
+            Plan planInfo = planService.getPlanDetail(dto.getPlan());
+            phoneDetailDtos.add(new PhoneDetailDto(phoneInfo,planInfo));
+        }
+
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COMPARE, phoneDetailDtos);
     }
 }
