@@ -169,13 +169,15 @@ public class ProductController {
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COMPARE, phoneDetailDtos);
     }
 
-    @PutMapping("/sales/{code}")
-    public ResponseMessage updateSales(@PathVariable("code") final String phoneCode) {
+    @PutMapping("/sales/{code}/{color}")
+    public ResponseMessage updateSales(@PathVariable("code") final String phoneCode,
+                                       @PathVariable("color") final String phoneColor) {
         // TODO Handle Exception ...
         logger.info("get product code : " + phoneCode);
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
+        spec = spec.and(ProductSpecification.equalPhoneColor(phoneColor));
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
         if (phoneInfo == null)
