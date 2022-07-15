@@ -26,6 +26,10 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("planCode"), planCode);
     }
 
+    public static Specification<Phone> equalPhoneColor(String color) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("color"), color);
+    }
+
     public static Specification<Phone> equalBrandId(Integer brandId) {
         return (root, query, criteriaBuilder) -> {
             Fetch<Phone, Brand> fetch = root.fetch("brand", JoinType.LEFT);

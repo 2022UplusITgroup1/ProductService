@@ -116,6 +116,7 @@ public class ProductController {
     @GetMapping("/detail")
     public ResponseMessage getPhoneDetailInfo(@RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
+                                              @RequestParam(value = "color", required = false) final Optional<String> color,
                                               @RequestParam(value = "dc_type") Integer discountType) {
         // TODO Handle Exception ...
         /*
@@ -125,6 +126,8 @@ public class ProductController {
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
+        if (color.isPresent())
+            spec = spec.and(ProductSpecification.equalPhoneColor(color.get().toString()));
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
         Plan planInfo = planService.getPlanDetail(planCode);
