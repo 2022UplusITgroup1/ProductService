@@ -1,5 +1,6 @@
 package com.uplus.productservice.controller;
 
+import com.uplus.productservice.controller.response.PhoneDetailDto;
 import com.uplus.productservice.controller.response.ResponseMessage;
 import com.uplus.productservice.controller.response.StatusCode;
 import com.uplus.productservice.controller.response.StatusMessage;
@@ -109,5 +110,30 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PLAN_SUMMARY, planList);
+    }
+
+    @GetMapping("/detail")
+    public ResponseMessage getPhoneDetailInfo(@RequestParam(value = "pl_code") String planCode,
+                                              @RequestParam(value = "ph_code") String phoneCode,
+                                              @RequestParam(value = "dc_type") Integer discountType) {
+        // TODO Handle Exception ...
+        /*
+        * 상세 정보 : model code , name, color, images, capability,
+        *           price, selected_plan, discount_type
+        * */
+
+        Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+        spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
+
+        Phone phoneInfo = phoneService.getPhoneDetail(spec);
+        Plan planInfo = planService.getPlanDetail(planCode);
+        List<Images> imagesList = phoneService.getPhoneImageList(phoneInfo.getId());
+
+        if (imagesList.isEmpty()) {
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+        }
+
+        PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
     }
 }

@@ -25,8 +25,8 @@ public class PhoneService {
         return phoneRepository.findAll(spec, Sort.by(direction > 0 ? Sort.Direction.DESC : Sort.Direction.ASC, orderColumnName));
     }
 
-    public Phone getPhoneDetail(String phoneCode) {
-        return phoneRepository.findByCode(phoneCode);
+    public Phone getPhoneDetail(Specification<Phone> spec) {
+        return phoneRepository.findOne(spec).orElse(null);
     }
 
     public List<Images> getPhoneImageList(int phoneId) {

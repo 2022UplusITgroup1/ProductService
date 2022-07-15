@@ -22,10 +22,6 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("networkSupport"), networkSupport);
     }
 
-    public static Specification<Phone> equalPhoneCode(String phoneCode) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("phoneCode"), phoneCode);
-    }
-
     public static Specification<Plan> equalPlanCode(String planCode) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("planCode"), planCode);
     }
@@ -41,6 +37,14 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> {
             Fetch<Phone, Storage> fetch = root.fetch("storage", JoinType.LEFT);
             return criteriaBuilder.equal(root.get("storage"), capability);
+        };
+    }
+
+    public static Specification<Phone> equalPhoneCode(String phoneCode) {
+        return (root, query, criteriaBuilder) -> {
+            Fetch<Phone, Storage> fetch = root.fetch("storage", JoinType.LEFT);
+            fetch = root.fetch("brand", JoinType.LEFT);
+            return criteriaBuilder.equal(root.get("code"), phoneCode);
         };
     }
 }
