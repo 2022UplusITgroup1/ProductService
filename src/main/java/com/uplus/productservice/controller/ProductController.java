@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpSession;
+
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
 // Create By: MYSEO              //
@@ -114,7 +116,8 @@ public class ProductController {
     }
 
     @GetMapping("/detail")
-    public ResponseMessage getPhoneDetailInfo(@RequestParam(value = "pl_code") String planCode,
+    public ResponseMessage getPhoneDetailInfo(HttpSession session,
+                                              @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
                                               @RequestParam(value = "dc_type") Integer discountType) {
@@ -124,6 +127,7 @@ public class ProductController {
         *           price, selected_plan, discount_type
         * */
 
+        logger.info("sessionId = {}", session.getId());
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
         if (color.isPresent())
@@ -136,6 +140,16 @@ public class ProductController {
         if (imagesList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
+
+        PhoneCompareDto phoneCompareDto = PhoneCompareDto.builder()
+                                                          .code(phoneCode)
+                                                          .networkSupport(phoneInfo.getNetworkSupport())
+                                                          .discountType(discountType)
+                                                          .color(phoneInfo.getColor())
+                                                          .plan(planCode)
+                                                          .build();
+
+        phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
 
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
@@ -188,5 +202,13 @@ public class ProductController {
         Phone phoneUpdateRes = phoneService.updateSalesCount(phoneInfo);
 
         return ResponseMessage.res(StatusCode.OK, StatusMessage.UPDATED_SALES_COUNT, phoneUpdateRes);
+    }
+
+    @GetMapping("/recents")
+    public ResponseMessage getRecentProducts(HttpSession session) {
+      List<PhoneCompareDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
+
+      logger.info("recent products: " + phoneCompareDtos.size());
+      return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
     }
 }
