@@ -54,6 +54,7 @@ public class ProductController {
             spec = spec.and(ProductSpecification.equalBrandId(brandId.get().intValue()));
 
         spec = spec.and(ProductSpecification.equalNetworkSupport(networkSupport.toUpperCase()));
+        spec = spec.and(ProductSpecification.equalIsDeleted(0));
 
         String orderColumnName = "createTime";
         int direction = 0; // ACS = 0 , DESC = 1
@@ -130,6 +131,7 @@ public class ProductController {
         logger.info("sessionId = {}", session.getId());
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
+        spec = spec.and(ProductSpecification.equalIsDeleted(0));
         if (color.isPresent())
             spec = spec.and(ProductSpecification.equalPhoneColor(color.get().toString()));
 

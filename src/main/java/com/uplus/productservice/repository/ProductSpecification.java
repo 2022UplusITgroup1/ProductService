@@ -26,6 +26,10 @@ public class ProductSpecification {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("planCode"), planCode);
     }
 
+    public static Specification<Phone> equalIsDeleted(Integer isDeleted) {
+      return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("isDeleted"), isDeleted);
+  }
+
     public static Specification<Phone> equalPhoneColor(String color) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("color"), color);
     }
