@@ -15,4 +15,5 @@ public class PhoneCompareDto {
     private Integer discountType;
     private String color;
     private String plan;
+    private String monthPrice;
 }
