@@ -1,6 +1,7 @@
 package com.uplus.productservice.service;
 
 import com.uplus.productservice.controller.request.PhoneCompareDto;
+import com.uplus.productservice.controller.response.StatusMessage;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.phone.Phone;
 import com.uplus.productservice.exception.NoAvailableItemException;
@@ -59,7 +60,7 @@ public class PhoneService {
             savedPhone =  phoneRepository.save(phone);
         } catch (Exception e) {
             e.printStackTrace();
-            throw new NoAvailableItemException("상품을 찾을 수 없습니다");
+            throw new RuntimeException(StatusMessage.DB_UPDATE_IS_ZERO);
         }
         return savedPhone;
     }
