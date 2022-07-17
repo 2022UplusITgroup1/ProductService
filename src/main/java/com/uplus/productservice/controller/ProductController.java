@@ -81,7 +81,7 @@ public class ProductController {
                 case 4:
                 {
                     orderColumnName = "price";
-                    direction = 0;
+                    direction = 1;
                     break;
                 }
                 case 5:
