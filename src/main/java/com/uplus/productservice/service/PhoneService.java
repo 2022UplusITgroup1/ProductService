@@ -1,6 +1,6 @@
 package com.uplus.productservice.service;
 
-import com.uplus.productservice.controller.request.PhoneCompareDto;
+import com.uplus.productservice.controller.request.PhoneSummaryDto;
 import com.uplus.productservice.controller.response.StatusMessage;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.phone.Phone;
@@ -38,7 +38,7 @@ public class PhoneService {
 
     private final PhoneRepository phoneRepository;
     private final ImageRepository imageRepository;
-    private final RedisTemplate<String, PhoneCompareDto> redisTemplate;
+    private final RedisTemplate<String, PhoneSummaryDto> redisTemplate;
 
     public List<Phone> getPhoneList(Specification<Phone> spec, String orderColumnName, int direction) {
         return phoneRepository.findAll(spec, Sort.by(direction > 0 ? Sort.Direction.DESC : Sort.Direction.ASC, orderColumnName));
@@ -66,8 +66,8 @@ public class PhoneService {
     }
 
     @Transactional
-    public void saveRecentProducts(String jSessionId, PhoneCompareDto phoneCompareDto) {
-      ZSetOperations<String, PhoneCompareDto> zSetOperations = redisTemplate.opsForZSet();
+    public void saveRecentProducts(String jSessionId, PhoneSummaryDto phoneCompareDto) {
+      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + jSessionId;
       final long score = Instant.now().toEpochMilli();
 
@@ -75,8 +75,8 @@ public class PhoneService {
       redisTemplate.expireAt(key, Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
     }
 
-    public List<PhoneCompareDto> getRecentProducts(String jSessionId) {
-      ZSetOperations<String, PhoneCompareDto> zSetOperations = redisTemplate.opsForZSet();
+    public List<PhoneSummaryDto> getRecentProducts(String jSessionId) {
+      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + jSessionId;
 
       if (zSetOperations.size(key) == 0)

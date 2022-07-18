@@ -1,6 +1,6 @@
 package com.uplus.productservice.controller;
 
-import com.uplus.productservice.controller.request.PhoneCompareDto;
+import com.uplus.productservice.controller.request.PhoneSummaryDto;
 import com.uplus.productservice.controller.response.PhoneDetailDto;
 import com.uplus.productservice.controller.response.ResponseMessage;
 import com.uplus.productservice.controller.response.StatusCode;
@@ -142,7 +142,7 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
 
-        PhoneCompareDto phoneCompareDto = PhoneCompareDto.builder()
+        PhoneSummaryDto phoneCompareDto = PhoneSummaryDto.builder()
                                                         .code(phoneCode)
                                                         .networkSupport(phoneInfo.getNetworkSupport())
                                                         .discountType(discountType)
@@ -158,7 +158,7 @@ public class ProductController {
     }
 
     @PostMapping("/compare")
-    public ResponseMessage comparePhones(@RequestBody List<PhoneCompareDto> compareList) {
+    public ResponseMessage comparePhones(@RequestBody List<PhoneSummaryDto> compareList) {
         // TODO Handle Exception ...
         /**
          * 비교 정보 : model code, selected_plan,
@@ -170,7 +170,7 @@ public class ProductController {
 
         List<PhoneDetailDto> phoneDetailDtos = new ArrayList<>();
 
-        for (PhoneCompareDto dto : compareList) {
+        for (PhoneSummaryDto dto : compareList) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.equalPhoneCode(dto.getCode()));
 
@@ -208,7 +208,7 @@ public class ProductController {
 
     @GetMapping("/recents")
     public ResponseMessage getRecentProducts(HttpSession session) {
-      List<PhoneCompareDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
+      List<PhoneSummaryDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
 
       logger.info("recent products: " + phoneCompareDtos.size());
       return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);

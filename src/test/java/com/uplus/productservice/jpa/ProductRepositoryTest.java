@@ -1,7 +1,7 @@
 package com.uplus.productservice.jpa;
 
 import com.uplus.productservice.ProductServiceApplicationTests;
-import com.uplus.productservice.controller.request.PhoneCompareDto;
+import com.uplus.productservice.controller.request.PhoneSummaryDto;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.plan.Plan;
 import com.uplus.productservice.domain.phone.Phone;
@@ -86,7 +86,7 @@ public class ProductRepositoryTest extends ProductServiceApplicationTests {
     @Test
     public void updateRecentsCache() {
       String jSessionId = "FDB5E30BF20045E8A9AAFC788383680C";
-      PhoneCompareDto phoneCompareDto = PhoneCompareDto.builder()
+      PhoneSummaryDto phoneCompareDto = PhoneSummaryDto.builder()
                                                         .code("SM-A235N")
                                                         .color("white")
                                                         .networkSupport("5G")
@@ -95,9 +95,9 @@ public class ProductRepositoryTest extends ProductServiceApplicationTests {
                                                         .build();
 
       phoneService.saveRecentProducts(jSessionId, phoneCompareDto);
-      List<PhoneCompareDto> phoneCompareDtos = phoneService.getRecentProducts(jSessionId);
+      List<PhoneSummaryDto> phoneCompareDtos = phoneService.getRecentProducts(jSessionId);
       System.out.println("cached count: " + phoneCompareDtos.size());
-      for (PhoneCompareDto recents : phoneCompareDtos) {
+      for (PhoneSummaryDto recents : phoneCompareDtos) {
         System.out.println("recents: " + recents.toString());
       }
     }

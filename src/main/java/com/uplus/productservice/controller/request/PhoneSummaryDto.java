@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PhoneCompareDto {
+public class PhoneSummaryDto {
     private String code;
     private String networkSupport;
     private Integer discountType;
