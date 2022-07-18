@@ -11,4 +11,5 @@ import java.util.List;
 ///////////////////////////////////
 public interface ImageRepository extends JpaRepository<Images, Integer> {
     List<Images> findByPhoneId(Integer phoneId);
+    List<Images> findByPhoneIdAndImgColor(Integer phoneId, String imgColor);
 }

@@ -135,7 +135,7 @@ public class ProductController {
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
         Plan planInfo = planService.getPlanDetail(planCode);
-        List<Images> imagesList = phoneService.getPhoneImageList(phoneInfo.getId());
+        List<Images> imagesList = phoneService.getPhoneImageList(phoneInfo.getId(), color);
 
         if (imagesList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);

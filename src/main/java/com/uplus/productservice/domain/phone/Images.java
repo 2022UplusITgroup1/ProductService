@@ -30,6 +30,10 @@ public class Images extends TimeStamp {
     private Integer phoneId;
 
     @NotNull
+    @Column(name = "img_color")
+    private String imgColor;
+
+    @NotNull
     @Column(name = "img_path")
     private String imgPath;
 

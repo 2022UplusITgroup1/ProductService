@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
@@ -48,7 +49,9 @@ public class PhoneService {
         return phoneRepository.findOne(spec).orElse(null);
     }
 
-    public List<Images> getPhoneImageList(int phoneId) {
+    public List<Images> getPhoneImageList(int phoneId, Optional<String> color) {
+        if (color.isPresent())
+            return imageRepository.findByPhoneIdAndImgColor(phoneId, color.get().toString());
         return imageRepository.findByPhoneId(phoneId);
     }
 
