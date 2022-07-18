@@ -119,8 +119,7 @@ public class ProductController {
                                               @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
-                                              @RequestParam(value = "dc_type") Integer discountType,
-                                              @RequestParam(value = "mon_price") Integer monthPrice) {
+                                              @RequestParam(value = "dc_type") Integer discountType) {
         // TODO Handle Exception ...
         /*
         * 상세 정보 : model code , name, color, images, capability,
@@ -148,7 +147,6 @@ public class ProductController {
                                                         .discountType(discountType)
                                                         .color(phoneInfo.getColor())
                                                         .plan(planCode)
-                                                        .monthPrice(monthPrice)
                                                         .build();
 
         phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
