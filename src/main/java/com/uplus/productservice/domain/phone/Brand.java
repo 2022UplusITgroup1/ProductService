@@ -16,9 +16,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "phone_brand_category", uniqueConstraints =
-        {@UniqueConstraint(name = "unq_phone_brand_category_on_name",
-        columnNames = "name")})
+@Table(name = "phone_brand_category")
 public class Brand extends TimeStamp {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

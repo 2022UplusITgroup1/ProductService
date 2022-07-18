@@ -16,9 +16,7 @@ import javax.persistence.*;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name="phone_image", uniqueConstraints =
-        {@UniqueConstraint(name = "unq_phone_image_on_img_path",
-        columnNames = "img_path")})
+@Table(name="phone_image")
 @ToString
 public class Images extends TimeStamp {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)

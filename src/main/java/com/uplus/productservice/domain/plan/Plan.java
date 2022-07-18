@@ -16,9 +16,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "plan", uniqueConstraints =
-        {@UniqueConstraint(name = "unq_plan_on_code",
-        columnNames = "code")})
+@Table(name = "plan")
 @ToString
 public class Plan extends TimeStamp {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
