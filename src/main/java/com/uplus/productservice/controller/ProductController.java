@@ -46,8 +46,12 @@ public class ProductController {
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
 
-        if (capability.isPresent())
-            spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
+        if (capability.isPresent()) {
+            if (capability.get().intValue() < 4)
+                spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
+            else
+                spec = spec.and(ProductSpecification.greaterThanOrEqualCapability(capability.get().intValue()));
+        }
         if (brandId.isPresent())
             spec = spec.and(ProductSpecification.equalBrandId(brandId.get().intValue()));
 
