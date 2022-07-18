@@ -86,4 +86,8 @@ public class PhoneService {
         throw new NoAvailableItemException("최근 본 상품이 존재하지 않습니다");
       return new ArrayList<>(zSetOperations.reverseRange(key, 0, -1));
     }
+
+    public List<String> getPhoneColors(String phoneCode) {
+        return phoneRepository.findColorByCode(phoneCode);
+    }
 }

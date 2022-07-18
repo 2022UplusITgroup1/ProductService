@@ -211,4 +211,12 @@ public class ProductController {
       logger.info("recent products: " + phoneCompareDtos.size());
       return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
     }
+
+    @GetMapping("/color")
+    public ResponseMessage getPhoneColor(@RequestParam(value = "ph_code") String phoneCode) {
+        List<String> phoneColorList = phoneService.getPhoneColors(phoneCode);
+        if (phoneColorList.isEmpty())
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COLOR, phoneColorList);
+    }
 }
