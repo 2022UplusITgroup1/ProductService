@@ -16,9 +16,7 @@ import javax.persistence.*;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "phone_storage_category" , uniqueConstraints =
-        {@UniqueConstraint(name = "unq_phone_storage_category_on_capability",
-        columnNames = "capability")})
+@Table(name = "phone_storage_category")
 public class Storage extends TimeStamp {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

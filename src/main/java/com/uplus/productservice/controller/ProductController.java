@@ -1,6 +1,6 @@
 package com.uplus.productservice.controller;
 
-import com.uplus.productservice.controller.request.PhoneCompareDto;
+import com.uplus.productservice.controller.request.PhoneSummaryDto;
 import com.uplus.productservice.controller.response.PhoneDetailDto;
 import com.uplus.productservice.controller.response.ResponseMessage;
 import com.uplus.productservice.controller.response.StatusCode;
@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.servlet.http.HttpSession;
+
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
 // Create By: MYSEO              //
@@ -37,21 +39,20 @@ public class ProductController {
 
     @GetMapping("/phone")
     public ResponseMessage getPhoneList(@RequestParam(value = "net_sp") final String networkSupport,
-                                        @RequestParam(value = "dc_type", required = false) final Optional<Integer> discountType,
                                         @RequestParam(value = "mf_name", required = false) final Optional<Integer> brandId,
                                         @RequestParam(value = "capa", required = false) final Optional<Integer> capability,
                                         @RequestParam(value = "ord", required = false) final Optional<Integer> orders) {
         // TODO Handle Exception ...
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
-        if (discountType.isPresent())
-            spec = spec.and(ProductSpecification.equalDiscountType(discountType.get().intValue()));
+
         if (capability.isPresent())
             spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
         if (brandId.isPresent())
             spec = spec.and(ProductSpecification.equalBrandId(brandId.get().intValue()));
 
         spec = spec.and(ProductSpecification.equalNetworkSupport(networkSupport.toUpperCase()));
+        spec = spec.and(ProductSpecification.equalIsDeleted(0));
 
         String orderColumnName = "createTime";
         int direction = 0; // ACS = 0 , DESC = 1
@@ -78,7 +79,7 @@ public class ProductController {
                 case 4:
                 {
                     orderColumnName = "price";
-                    direction = 0;
+                    direction = 1;
                     break;
                 }
                 case 5:
@@ -114,18 +115,22 @@ public class ProductController {
     }
 
     @GetMapping("/detail")
-    public ResponseMessage getPhoneDetailInfo(@RequestParam(value = "pl_code") String planCode,
+    public ResponseMessage getPhoneDetailInfo(HttpSession session,
+                                              @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
-                                              @RequestParam(value = "dc_type") Integer discountType) {
+                                              @RequestParam(value = "dc_type") Integer discountType,
+                                              @RequestParam(value = "mon_price") Integer monthPrice) {
         // TODO Handle Exception ...
         /*
         * 상세 정보 : model code , name, color, images, capability,
-        *           price, selected_plan, discount_type
+        *           price, selected_plan
         * */
 
+        logger.info("sessionId = {}", session.getId());
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
+        spec = spec.and(ProductSpecification.equalIsDeleted(0));
         if (color.isPresent())
             spec = spec.and(ProductSpecification.equalPhoneColor(color.get().toString()));
 
@@ -137,12 +142,23 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
 
+        PhoneSummaryDto phoneCompareDto = PhoneSummaryDto.builder()
+                                                        .code(phoneCode)
+                                                        .networkSupport(phoneInfo.getNetworkSupport())
+                                                        .discountType(discountType)
+                                                        .color(phoneInfo.getColor())
+                                                        .plan(planCode)
+                                                        .monthPrice(monthPrice)
+                                                        .build();
+
+        phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
+
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
     }
 
     @PostMapping("/compare")
-    public ResponseMessage comparePhones(@RequestBody List<PhoneCompareDto> compareList) {
+    public ResponseMessage comparePhones(@RequestBody List<PhoneSummaryDto> compareList) {
         // TODO Handle Exception ...
         /**
          * 비교 정보 : model code, selected_plan,
@@ -154,7 +170,7 @@ public class ProductController {
 
         List<PhoneDetailDto> phoneDetailDtos = new ArrayList<>();
 
-        for (PhoneCompareDto dto : compareList) {
+        for (PhoneSummaryDto dto : compareList) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.equalPhoneCode(dto.getCode()));
 
@@ -188,5 +204,13 @@ public class ProductController {
         Phone phoneUpdateRes = phoneService.updateSalesCount(phoneInfo);
 
         return ResponseMessage.res(StatusCode.OK, StatusMessage.UPDATED_SALES_COUNT, phoneUpdateRes);
+    }
+
+    @GetMapping("/recents")
+    public ResponseMessage getRecentProducts(HttpSession session) {
+      List<PhoneSummaryDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
+
+      logger.info("recent products: " + phoneCompareDtos.size());
+      return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
     }
 }
