@@ -39,15 +39,13 @@ public class ProductController {
 
     @GetMapping("/phone")
     public ResponseMessage getPhoneList(@RequestParam(value = "net_sp") final String networkSupport,
-                                        @RequestParam(value = "dc_type", required = false) final Optional<Integer> discountType,
                                         @RequestParam(value = "mf_name", required = false) final Optional<Integer> brandId,
                                         @RequestParam(value = "capa", required = false) final Optional<Integer> capability,
                                         @RequestParam(value = "ord", required = false) final Optional<Integer> orders) {
         // TODO Handle Exception ...
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
-        if (discountType.isPresent())
-            spec = spec.and(ProductSpecification.equalDiscountType(discountType.get().intValue()));
+
         if (capability.isPresent())
             spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
         if (brandId.isPresent())
@@ -121,11 +119,12 @@ public class ProductController {
                                               @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
-                                              @RequestParam(value = "dc_type") Integer discountType) {
+                                              @RequestParam(value = "dc_type") Integer discountType,
+                                              @RequestParam(value = "mon_price") Integer monthPrice) {
         // TODO Handle Exception ...
         /*
         * 상세 정보 : model code , name, color, images, capability,
-        *           price, selected_plan, discount_type
+        *           price, selected_plan
         * */
 
         logger.info("sessionId = {}", session.getId());
@@ -144,12 +143,13 @@ public class ProductController {
         }
 
         PhoneCompareDto phoneCompareDto = PhoneCompareDto.builder()
-                                                          .code(phoneCode)
-                                                          .networkSupport(phoneInfo.getNetworkSupport())
-                                                          .discountType(discountType)
-                                                          .color(phoneInfo.getColor())
-                                                          .plan(planCode)
-                                                          .build();
+                                                        .code(phoneCode)
+                                                        .networkSupport(phoneInfo.getNetworkSupport())
+                                                        .discountType(discountType)
+                                                        .color(phoneInfo.getColor())
+                                                        .plan(planCode)
+                                                        .monthPrice(monthPrice)
+                                                        .build();
 
         phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
 

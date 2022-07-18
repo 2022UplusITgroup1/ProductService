@@ -14,10 +14,6 @@ import javax.persistence.criteria.JoinType;
 // Create By: MYSEO              //
 ///////////////////////////////////
 public class ProductSpecification {
-    public static Specification<Phone> equalDiscountType(Integer discountType) {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("discountType"), discountType);
-    }
-
     public static Specification<Phone> equalNetworkSupport(String networkSupport) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("networkSupport"), networkSupport);
     }
