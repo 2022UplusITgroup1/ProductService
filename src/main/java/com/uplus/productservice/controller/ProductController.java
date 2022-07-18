@@ -178,7 +178,7 @@ public class ProductController {
 
             Phone phoneInfo = phoneService.getPhoneDetail(spec);
             if (phoneInfo == null)
-                throw new ItemIsDeletedException("선택하신 상품이 존재하지 않습니다.");
+                return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
             Plan planInfo = planService.getPlanDetail(dto.getPlan());
             phoneDetailDtos.add(new PhoneDetailDto(phoneInfo,planInfo));
@@ -199,7 +199,7 @@ public class ProductController {
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
         if (phoneInfo == null)
-            throw new ItemIsDeletedException("선택하신 상품이 존재하지 않습니다.");
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
         phoneInfo.setSales(phoneInfo.getSales()+1);
 
