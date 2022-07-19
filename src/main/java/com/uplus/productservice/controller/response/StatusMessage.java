@@ -10,6 +10,7 @@ public class StatusMessage {
 
     public static final String READ_PRODUCT_COMPARE = "모바일 상품 비교 조회 성공";
     public static final String READ_PRODUCT_COLOR = "모바일 상품 색상 조회 성공";
+    public static final String READ_PRODUCT_SEARCH = "모바일 상품 검색 조회 성공";
     public static final String READ_PLAN_SUMMARY = "요금제 리스트 조회 성공";
     public static final String NOT_FOUND_PRODUCT = "알맞은 결과를 찾을 수 없습니다";
 

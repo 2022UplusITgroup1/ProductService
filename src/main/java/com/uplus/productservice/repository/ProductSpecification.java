@@ -58,4 +58,12 @@ public class ProductSpecification {
             return criteriaBuilder.equal(root.get("code"), phoneCode);
         };
     }
+
+    public static Specification<Phone> likePhoneName(String phoneName) {
+        return (root, query, criteriaBuilder) -> {
+            Fetch<Phone, Storage> fetch = root.fetch("storage", JoinType.LEFT);
+            fetch = root.fetch("brand", JoinType.LEFT);
+            return criteriaBuilder.like(root.get("name"), phoneName+"%");
+        };
+    }
 }

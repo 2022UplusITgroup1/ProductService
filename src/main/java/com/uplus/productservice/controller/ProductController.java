@@ -223,4 +223,17 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COLOR, phoneColorList);
     }
+
+    @GetMapping("/search")
+    public ResponseMessage getSearchResults(@RequestParam(value = "ph_name") String phoneName) {
+        Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+        spec = spec.and(ProductSpecification.likePhoneName(phoneName));
+
+        List<Phone> searchResults = phoneService.getSearchResults(spec);
+
+        if (searchResults.isEmpty())
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SEARCH, searchResults);
+    }
 }
