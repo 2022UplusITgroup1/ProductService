@@ -47,9 +47,17 @@ public class ProductController {
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
 
         if (capability.isPresent()) {
+            /**
+             * 저장 용량
+             * 1 : 64GB
+             * 2 : 128GB
+             * 3 : 256GB
+             * 4 : 512GB
+             * 5 : 1TB
+             */
             if (capability.get().intValue() < 4)
                 spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
-            else
+            else // 512GB 이상인 경우
                 spec = spec.and(ProductSpecification.greaterThanOrEqualCapability(capability.get().intValue()));
         }
         if (brandId.isPresent())
