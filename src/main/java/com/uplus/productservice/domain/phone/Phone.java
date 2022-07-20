@@ -6,6 +6,7 @@ import com.uplus.productservice.domain.TimeStamp;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
@@ -18,7 +19,7 @@ import javax.persistence.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 @Table(name = "phone")
-public class Phone extends TimeStamp {
+public class Phone {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     @JsonIgnore
@@ -70,4 +71,11 @@ public class Phone extends TimeStamp {
     @NotNull
     @Column(name = "is_deleted")
     private Integer isDeleted;
+
+    @Column(name = "create_time")
+    LocalDateTime createTime;
+
+    @JsonIgnore
+    @Column(name = "modify_time")
+    LocalDateTime modifyTime;
 }
