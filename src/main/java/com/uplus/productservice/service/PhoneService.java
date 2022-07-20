@@ -2,6 +2,7 @@ package com.uplus.productservice.service;
 
 import com.uplus.productservice.controller.request.PhoneSummaryDto;
 import com.uplus.productservice.controller.response.StatusMessage;
+import com.uplus.productservice.domain.phone.Color;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.phone.Phone;
 import com.uplus.productservice.exception.NoAvailableItemException;
@@ -88,7 +89,15 @@ public class PhoneService {
     }
 
     public List<String> getPhoneColors(String phoneCode) {
-        return phoneRepository.findColorByCode(phoneCode);
+        List<Color> colors = phoneRepository.findColorByCode(phoneCode);
+        if (colors.isEmpty())
+            throw new NoAvailableItemException("색상이 존재하지 않습니다.");
+
+        List<String> colorList = new ArrayList<>();
+        for (Color co : colors) {
+            colorList.add(co.getColor());
+        }
+        return colorList;
     }
 
     public List<Phone> getSearchResults(Specification<Phone> spec) {

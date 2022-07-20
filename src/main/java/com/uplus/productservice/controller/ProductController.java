@@ -8,7 +8,6 @@ import com.uplus.productservice.controller.response.StatusMessage;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.plan.Plan;
 import com.uplus.productservice.domain.phone.Phone;
-import com.uplus.productservice.exception.ItemIsDeletedException;
 import com.uplus.productservice.exception.NoAvailableItemException;
 import com.uplus.productservice.repository.ProductSpecification;
 import com.uplus.productservice.service.PhoneService;
