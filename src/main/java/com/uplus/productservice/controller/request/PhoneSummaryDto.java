@@ -5,6 +5,10 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+////////////////////////////////////
+// Create Date: 2022.07.15        //
+// Create By: MYSEO              //
+///////////////////////////////////
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,5 +19,4 @@ public class PhoneSummaryDto {
     private Integer discountType;
     private String color;
     private String plan;
-    private Integer monthPrice;
 }

@@ -24,6 +24,7 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
@@ -38,8 +39,8 @@ public class PhoneService {
 
     private final PhoneRepository phoneRepository;
     private final ImageRepository imageRepository;
-    private final RedisTemplate<String, PhoneSummaryDto> redisTemplate;
 
+    private final RedisTemplate<String, PhoneSummaryDto> redisTemplate;
     public List<Phone> getPhoneList(Specification<Phone> spec, String orderColumnName, int direction) {
         return phoneRepository.findAll(spec, Sort.by(direction > 0 ? Sort.Direction.DESC : Sort.Direction.ASC, orderColumnName));
     }
@@ -48,7 +49,9 @@ public class PhoneService {
         return phoneRepository.findOne(spec).orElse(null);
     }
 
-    public List<Images> getPhoneImageList(int phoneId) {
+    public List<Images> getPhoneImageList(int phoneId, Optional<String> color) {
+        if (color.isPresent())
+            return imageRepository.findByPhoneIdAndImgColor(phoneId, color.get().toString());
         return imageRepository.findByPhoneId(phoneId);
     }
 
@@ -68,7 +71,7 @@ public class PhoneService {
     @Transactional
     public void saveRecentProducts(String jSessionId, PhoneSummaryDto phoneCompareDto) {
       ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
-      String key = REDIS_PREFIX_KEY + jSessionId;
+      String key = REDIS_PREFIX_KEY + "::" + jSessionId;
       final long score = Instant.now().toEpochMilli();
 
       if (zSetOperations.add(key, phoneCompareDto, score)) return;
@@ -77,10 +80,18 @@ public class PhoneService {
 
     public List<PhoneSummaryDto> getRecentProducts(String jSessionId) {
       ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
-      String key = REDIS_PREFIX_KEY + jSessionId;
+      String key = REDIS_PREFIX_KEY + "::" + jSessionId;
 
       if (zSetOperations.size(key) == 0)
         throw new NoAvailableItemException("최근 본 상품이 존재하지 않습니다");
       return new ArrayList<>(zSetOperations.reverseRange(key, 0, -1));
+    }
+
+    public List<String> getPhoneColors(String phoneCode) {
+        return phoneRepository.findColorByCode(phoneCode);
+    }
+
+    public List<Phone> getSearchResults(Specification<Phone> spec) {
+        return phoneRepository.findAll(spec);
     }
 }

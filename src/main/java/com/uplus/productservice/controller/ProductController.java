@@ -46,8 +46,20 @@ public class ProductController {
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
 
-        if (capability.isPresent())
-            spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
+        if (capability.isPresent()) {
+            /**
+             * 저장 용량
+             * 1 : 64GB
+             * 2 : 128GB
+             * 3 : 256GB
+             * 4 : 512GB
+             * 5 : 1TB
+             */
+            if (capability.get().intValue() < 4)
+                spec = spec.and(ProductSpecification.equalCapability(capability.get().intValue()));
+            else // 512GB 이상인 경우
+                spec = spec.and(ProductSpecification.greaterThanOrEqualCapability(capability.get().intValue()));
+        }
         if (brandId.isPresent())
             spec = spec.and(ProductSpecification.equalBrandId(brandId.get().intValue()));
 
@@ -57,11 +69,19 @@ public class ProductController {
         String orderColumnName = "createTime";
         int direction = 0; // ACS = 0 , DESC = 1
         if (orders.isPresent()) {
+            /**
+             * 모바일 상품 리스트 정렬
+             * 0 : 최근 출시된 상품 순
+             * 1 : 실 구매가 낮은 순
+             * 2 : 정상가 낮은 순
+             * 3 : 정상가 높은 순
+             * 4 : 누적 판매량이 높은 순
+             */
             switch (orders.get().intValue()) {
-                case 0:
+                case 1:
                 {
-                    orderColumnName = "sales";
-                    direction = 1;
+                    orderColumnName = "price";
+                    direction = 0;
                     break;
                 }
                 case 2:
@@ -73,16 +93,10 @@ public class ProductController {
                 case 3:
                 {
                     orderColumnName = "price";
-                    direction = 0;
-                    break;
-                }
-                case 4:
-                {
-                    orderColumnName = "price";
                     direction = 1;
                     break;
                 }
-                case 5:
+                case 4:
                 {
                     orderColumnName = "sales";
                     direction = 1;
@@ -119,8 +133,7 @@ public class ProductController {
                                               @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
-                                              @RequestParam(value = "dc_type") Integer discountType,
-                                              @RequestParam(value = "mon_price") Integer monthPrice) {
+                                              @RequestParam(value = "dc_type") Integer discountType) {
         // TODO Handle Exception ...
         /*
         * 상세 정보 : model code , name, color, images, capability,
@@ -136,7 +149,7 @@ public class ProductController {
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
         Plan planInfo = planService.getPlanDetail(planCode);
-        List<Images> imagesList = phoneService.getPhoneImageList(phoneInfo.getId());
+        List<Images> imagesList = phoneService.getPhoneImageList(phoneInfo.getId(), color);
 
         if (imagesList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
@@ -148,7 +161,6 @@ public class ProductController {
                                                         .discountType(discountType)
                                                         .color(phoneInfo.getColor())
                                                         .plan(planCode)
-                                                        .monthPrice(monthPrice)
                                                         .build();
 
         phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
@@ -176,7 +188,7 @@ public class ProductController {
 
             Phone phoneInfo = phoneService.getPhoneDetail(spec);
             if (phoneInfo == null)
-                throw new ItemIsDeletedException("선택하신 상품이 존재하지 않습니다.");
+                return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
             Plan planInfo = planService.getPlanDetail(dto.getPlan());
             phoneDetailDtos.add(new PhoneDetailDto(phoneInfo,planInfo));
@@ -197,7 +209,7 @@ public class ProductController {
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
         if (phoneInfo == null)
-            throw new ItemIsDeletedException("선택하신 상품이 존재하지 않습니다.");
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
         phoneInfo.setSales(phoneInfo.getSales()+1);
 
@@ -212,5 +224,26 @@ public class ProductController {
 
       logger.info("recent products: " + phoneCompareDtos.size());
       return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
+    }
+
+    @GetMapping("/color")
+    public ResponseMessage getPhoneColor(@RequestParam(value = "ph_code") String phoneCode) {
+        List<String> phoneColorList = phoneService.getPhoneColors(phoneCode);
+        if (phoneColorList.isEmpty())
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COLOR, phoneColorList);
+    }
+
+    @GetMapping("/search")
+    public ResponseMessage getSearchResults(@RequestParam(value = "ph_name") String phoneName) {
+        Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+        spec = spec.and(ProductSpecification.likePhoneName(phoneName));
+
+        List<Phone> searchResults = phoneService.getSearchResults(spec);
+
+        if (searchResults.isEmpty())
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SEARCH, searchResults);
     }
 }

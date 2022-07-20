@@ -17,7 +17,6 @@ import java.time.LocalDateTime;
 @Getter
 @MappedSuperclass
 public abstract class TimeStamp {
-    @JsonIgnore
     @Column(name = "create_time")
     LocalDateTime createTime;
 

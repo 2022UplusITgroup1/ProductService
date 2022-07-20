@@ -44,11 +44,26 @@ public class ProductSpecification {
         };
     }
 
+    public static Specification<Phone> greaterThanOrEqualCapability(Integer capability) {
+        return (root, query, criteriaBuilder) -> {
+            Fetch<Phone, Storage> fetch = root.fetch("storage", JoinType.LEFT);
+            return criteriaBuilder.greaterThanOrEqualTo(root.get("storage"), capability);
+        };
+    }
+
     public static Specification<Phone> equalPhoneCode(String phoneCode) {
         return (root, query, criteriaBuilder) -> {
             Fetch<Phone, Storage> fetch = root.fetch("storage", JoinType.LEFT);
             fetch = root.fetch("brand", JoinType.LEFT);
             return criteriaBuilder.equal(root.get("code"), phoneCode);
+        };
+    }
+
+    public static Specification<Phone> likePhoneName(String phoneName) {
+        return (root, query, criteriaBuilder) -> {
+            Fetch<Phone, Storage> fetch = root.fetch("storage", JoinType.LEFT);
+            fetch = root.fetch("brand", JoinType.LEFT);
+            return criteriaBuilder.like(root.get("name"), phoneName+"%");
         };
     }
 }
