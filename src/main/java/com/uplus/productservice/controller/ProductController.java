@@ -61,11 +61,19 @@ public class ProductController {
         String orderColumnName = "createTime";
         int direction = 0; // ACS = 0 , DESC = 1
         if (orders.isPresent()) {
+            /**
+             * 모바일 상품 리스트 정렬
+             * 0 : 최근 출시된 상품 순
+             * 1 : 실 구매가 낮은 순
+             * 2 : 정상가 낮은 순
+             * 3 : 정상가 높은 순
+             * 4 : 누적 판매량이 높은 순
+             */
             switch (orders.get().intValue()) {
-                case 0:
+                case 1:
                 {
-                    orderColumnName = "sales";
-                    direction = 1;
+                    orderColumnName = "price";
+                    direction = 0;
                     break;
                 }
                 case 2:
@@ -77,16 +85,10 @@ public class ProductController {
                 case 3:
                 {
                     orderColumnName = "price";
-                    direction = 0;
-                    break;
-                }
-                case 4:
-                {
-                    orderColumnName = "price";
                     direction = 1;
                     break;
                 }
-                case 5:
+                case 4:
                 {
                     orderColumnName = "sales";
                     direction = 1;
