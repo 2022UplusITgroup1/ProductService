@@ -154,7 +154,7 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
 
-        PhoneSummaryDto phoneCompareDto = PhoneSummaryDto.builder()
+        PhoneSummaryDto phoneSummaryDto = PhoneSummaryDto.builder()
                                                         .code(phoneCode)
                                                         .networkSupport(phoneInfo.getNetworkSupport())
                                                         .discountType(discountType)
@@ -162,7 +162,7 @@ public class ProductController {
                                                         .plan(planCode)
                                                         .build();
 
-        phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
+        phoneService.saveRecentProducts(session.getId(), phoneSummaryDto);
 
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
@@ -189,6 +189,8 @@ public class ProductController {
             if (phoneInfo == null)
                 return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
+            // 선택한 할인 유형 값으로 바꾸어 리턴
+            phoneInfo.setDiscountType(dto.getDiscountType());
             Plan planInfo = planService.getPlanDetail(dto.getPlan());
             phoneDetailDtos.add(new PhoneDetailDto(phoneInfo,planInfo));
         }

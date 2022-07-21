@@ -52,6 +52,7 @@ public class Phone {
     private String networkSupport;
 
     @Column(name = "discount_type")
+    @Setter
     private Integer discountType;
 
     @NotNull
