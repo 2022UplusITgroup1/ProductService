@@ -13,6 +13,7 @@ import com.uplus.productservice.exception.NoAvailableItemException;
 import com.uplus.productservice.repository.ProductSpecification;
 import com.uplus.productservice.service.PhoneService;
 import com.uplus.productservice.service.PlanService;
+import com.uplus.productservice.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import javax.servlet.http.HttpSession;
 public class ProductController {
     private final PhoneService phoneService;
     private final PlanService planService;
+    private final SearchService searchService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GetMapping("/phone")
@@ -95,12 +97,12 @@ public class ProductController {
                     break;
                 }
             }
-            logger.info("order number : " + orders.get().intValue() +
+            logger.debug("order number : " + orders.get().intValue() +
                     " column : " + orderColumnName + " direction : " + direction);
         }
         List<Phone> phoneList = phoneService.getPhoneList(spec, orderColumnName, direction);
 
-        logger.info(networkSupport + " phone list : " + phoneList.toString());
+        logger.debug(networkSupport + " phone list : " + phoneList.toString());
         if (phoneList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
@@ -113,7 +115,7 @@ public class ProductController {
         // TODO Handle Exception ...
         List<Plan> planList = planService.getPlanList(networkSupport);
 
-        logger.info(networkSupport + " plan list : " + planList.toString());
+        logger.debug(networkSupport + " plan list : " + planList.toString());
         if (planList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
@@ -193,7 +195,7 @@ public class ProductController {
     public ResponseMessage updateSales(@PathVariable("code") final String phoneCode,
                                        @PathVariable("color") final String phoneColor) {
         // TODO Handle Exception ...
-        logger.info("get product code : " + phoneCode);
+        logger.debug("get product code : " + phoneCode);
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
@@ -214,7 +216,7 @@ public class ProductController {
     public ResponseMessage getRecentProducts(HttpSession session) {
       List<PhoneSummaryDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
 
-      logger.info("recent products: " + phoneCompareDtos.size());
+      logger.debug("recent products: " + phoneCompareDtos.size());
       return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
     }
 
@@ -227,14 +229,17 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseMessage getSearchResults(@RequestParam(value = "ph_name") String phoneName) {
-        Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
-        spec = spec.and(ProductSpecification.likePhoneName(phoneName));
+    public ResponseMessage getSearchResults(@RequestParam(value = "word") String keyword) {
+        logger.debug("search word: " + keyword);
+        List<Phone> searchResults = searchService.getSearchResults(keyword);
 
-        List<Phone> searchResults = phoneService.getSearchResults(spec);
+        if (searchResults.isEmpty()) {
+            Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+            spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword));
+            spec = spec.or(ProductSpecification.likeCodeAsKeyword(keyword));
 
-        if (searchResults.isEmpty())
-            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+            searchResults = phoneService.getSearchResults(spec);
+        }
 
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SEARCH, searchResults);
     }
