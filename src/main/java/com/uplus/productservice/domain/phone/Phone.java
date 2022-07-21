@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sun.istack.NotNull;
 import com.uplus.productservice.domain.TimeStamp;
 import lombok.*;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -19,6 +21,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 @Table(name = "phone")
+
+@Indexed
 public class Phone {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -37,10 +41,12 @@ public class Phone {
 
     @NotNull
     @Column(name = "code")
+    @FullTextField()
     private String code;
 
     @NotNull
     @Column(name = "name")
+    @FullTextField()
     private String name;
 
     @NotNull

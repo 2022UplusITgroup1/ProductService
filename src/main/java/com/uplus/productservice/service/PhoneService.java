@@ -101,6 +101,9 @@ public class PhoneService {
     }
 
     public List<Phone> getSearchResults(Specification<Phone> spec) {
-        return phoneRepository.findAll(spec);
+        List<Phone> searchResults = phoneRepository.findAll(spec);
+        if (searchResults.isEmpty())
+            throw new NoAvailableItemException("알맞은 결과를 찾을 수 없습니다");
+        return searchResults;
     }
 }
