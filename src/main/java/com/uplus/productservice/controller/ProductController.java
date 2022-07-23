@@ -132,7 +132,7 @@ public class ProductController {
     @GetMapping("/plan")
     public ResponseMessage getPlanList(@RequestParam(value = "net_sp") final String networkSupport) {
         // TODO Handle Exception ...
-        List<Plan> planList = planService.getPlanList(networkSupport);
+        List<Plan> planList = planService.getPlanList(networkSupport.toUpperCase());
 
         logger.debug(networkSupport + " plan list : " + planList.toString());
         if (planList.isEmpty()) {
