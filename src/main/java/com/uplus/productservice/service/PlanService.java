@@ -24,7 +24,10 @@ public class PlanService {
         return planRepository.findByCode(planCode);
     }
 
-    public Plan getPlanPrice(String planCode) {
+    public Plan getPlanPriceByCode(String planCode) {
         return planRepository.findByCode(planCode);
+    }
+    public Plan getPlanPriceByNetworkSupport(String networkSupport) {
+        return planRepository.findTopByNetworkSupportOrderByIdAsc(networkSupport);
     }
 }

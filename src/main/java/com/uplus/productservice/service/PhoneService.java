@@ -98,16 +98,11 @@ public class PhoneService {
       return new ArrayList<>(zSetOperations.reverseRange(key, 0, -1));
     }
 
-    public List<String> getPhoneColors(String phoneCode) {
+    public List<Color> getPhoneColors(String phoneCode) {
         List<Color> colors = phoneRepository.findColorByCode(phoneCode);
         if (colors.isEmpty())
             throw new NoAvailableItemException("색상이 존재하지 않습니다.");
-
-        List<String> colorList = new ArrayList<>();
-        for (Color co : colors) {
-            colorList.add(co.getColor());
-        }
-        return colorList;
+        return colors;
     }
 
     public List<Phone> getSearchResults(Specification<Phone> spec) {

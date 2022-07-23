@@ -17,7 +17,7 @@ public class PhoneSummaryDto extends Phone {
         super(phone.getId(), phone.getStorage(),
                 phone.getBrand(), phone.getCode(), phone.getName(),
                 phone.getImgThumbnail(), phone.getNetworkSupport(),
-                phone.getDiscountType(), phone.getColor(), phone.getPrice(),
+                phone.getDiscountType(), phone.getColor(), phone.getColorHexCode(), phone.getPrice(),
                 phone.getSales(), phone.getIsDeleted(), phone.getCreateTime(),
                 phone.getModifyTime());
         this.planCode = planCode;

@@ -65,6 +65,10 @@ public class Phone {
     private String color;
 
     @NotNull
+    @Column(name = "color_hex_code")
+    private String colorHexCode;
+
+    @NotNull
     @Column(name = "price")
     private Integer price;
 

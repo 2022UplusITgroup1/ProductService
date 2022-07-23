@@ -2,6 +2,7 @@ package com.uplus.productservice.controller;
 
 import com.uplus.productservice.controller.request.PhoneRequestDto;
 import com.uplus.productservice.controller.response.*;
+import com.uplus.productservice.domain.phone.Color;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.plan.Plan;
 import com.uplus.productservice.domain.phone.Phone;
@@ -39,7 +40,7 @@ public class ProductController {
     public ResponseMessage getPhoneList(@RequestParam(value = "net_sp") final String networkSupport,
                                         @RequestParam(value = "mf_name", required = false) final Optional<Integer> brandId,
                                         @RequestParam(value = "capa", required = false) final Optional<Integer> capability,
-                                        @RequestParam(value = "plan", defaultValue = "LUP0001") final String planCode,
+                                        @RequestParam(value = "plan", required = false) final Optional<String> planCode,
                                         @RequestParam(value = "ord", required = false) final Optional<Integer> orders) {
         // TODO Handle Exception ...
 
@@ -114,17 +115,22 @@ public class ProductController {
         }
 
         // 요금제와 할인 유형에 따라 월 요금 계산
-        Plan plan = planService.getPlanPrice(planCode);
+        // 요금제 코드가 정의되지 않는 경우 network support 값에 따라 default plan code 를 사용
+        Plan plan = null;
+        if (planCode.isPresent())
+            plan = planService.getPlanPriceByCode(planCode.get().toString());
+        else
+            plan = planService.getPlanPriceByNetworkSupport(networkSupport.toUpperCase());
+
         if (plan == null)
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
-        List<PhoneSummaryDto> phoneSummaryDtos = phoneService.getPhoneSummary(phoneList, planCode, plan.getPrice());
-
+        List<PhoneSummaryDto> phoneSummaryDtos = phoneService.getPhoneSummary(phoneList, plan.getCode(), plan.getPrice());
+        logger.debug(networkSupport + " summary phone list : " + phoneSummaryDtos.toString());
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneSummaryDtos);
     }
 
     @GetMapping("/plan")
-    public ResponseMessage getPlanList(@RequestParam(value = "net_sp") final String networkSupport,
-                                       @RequestParam(value = "pl_code", required = false) String planCode) {
+    public ResponseMessage getPlanList(@RequestParam(value = "net_sp") final String networkSupport) {
         // TODO Handle Exception ...
         List<Plan> planList = planService.getPlanList(networkSupport);
 
@@ -172,6 +178,8 @@ public class ProductController {
 
         phoneService.saveRecentProducts(session.getId(), phoneRequestDto);
 
+        // 선택한 할인 유형 값으로 바꾸어 리턴
+        phoneInfo.setDiscountType(discountType);
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
     }
@@ -237,7 +245,7 @@ public class ProductController {
 
     @GetMapping("/color")
     public ResponseMessage getPhoneColor(@RequestParam(value = "ph_code") String phoneCode) {
-        List<String> phoneColorList = phoneService.getPhoneColors(phoneCode);
+        List<Color> phoneColorList = phoneService.getPhoneColors(phoneCode);
         if (phoneColorList.isEmpty())
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COLOR, phoneColorList);
