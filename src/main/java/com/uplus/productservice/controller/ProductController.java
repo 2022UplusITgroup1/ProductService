@@ -1,18 +1,15 @@
 package com.uplus.productservice.controller;
 
-import com.uplus.productservice.controller.request.PhoneSummaryDto;
-import com.uplus.productservice.controller.response.PhoneDetailDto;
-import com.uplus.productservice.controller.response.ResponseMessage;
-import com.uplus.productservice.controller.response.StatusCode;
-import com.uplus.productservice.controller.response.StatusMessage;
+import com.uplus.productservice.controller.request.PhoneRequestDto;
+import com.uplus.productservice.controller.response.*;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.plan.Plan;
 import com.uplus.productservice.domain.phone.Phone;
-import com.uplus.productservice.exception.ItemIsDeletedException;
 import com.uplus.productservice.exception.NoAvailableItemException;
 import com.uplus.productservice.repository.ProductSpecification;
 import com.uplus.productservice.service.PhoneService;
 import com.uplus.productservice.service.PlanService;
+import com.uplus.productservice.service.SearchService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,12 +32,14 @@ import javax.servlet.http.HttpSession;
 public class ProductController {
     private final PhoneService phoneService;
     private final PlanService planService;
+    private final SearchService searchService;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @GetMapping("/phone")
     public ResponseMessage getPhoneList(@RequestParam(value = "net_sp") final String networkSupport,
                                         @RequestParam(value = "mf_name", required = false) final Optional<Integer> brandId,
                                         @RequestParam(value = "capa", required = false) final Optional<Integer> capability,
+                                        @RequestParam(value = "plan", defaultValue = "LUP0001") final String planCode,
                                         @RequestParam(value = "ord", required = false) final Optional<Integer> orders) {
         // TODO Handle Exception ...
 
@@ -76,6 +75,7 @@ public class ProductController {
              * 2 : 정상가 낮은 순
              * 3 : 정상가 높은 순
              * 4 : 누적 판매량이 높은 순
+             * 프론트에서 정렬을 처리하지만 서버로 ord 가 넘어오는 경우에는 서버에서 처리 가능하도록 구성
              */
             switch (orders.get().intValue()) {
                 case 1:
@@ -103,16 +103,23 @@ public class ProductController {
                     break;
                 }
             }
-            logger.info("order number : " + orders.get().intValue() +
+            logger.debug("order number : " + orders.get().intValue() +
                     " column : " + orderColumnName + " direction : " + direction);
         }
         List<Phone> phoneList = phoneService.getPhoneList(spec, orderColumnName, direction);
 
-        logger.info(networkSupport + " phone list : " + phoneList.toString());
+        logger.debug(networkSupport + " phone list : " + phoneList.toString());
         if (phoneList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
-        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneList);
+
+        // 요금제와 할인 유형에 따라 월 요금 계산
+        Plan plan = planService.getPlanPrice(planCode);
+        if (plan == null)
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+        List<PhoneSummaryDto> phoneSummaryDtos = phoneService.getPhoneSummary(phoneList, planCode, plan.getPrice());
+
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneSummaryDtos);
     }
 
     @GetMapping("/plan")
@@ -121,7 +128,7 @@ public class ProductController {
         // TODO Handle Exception ...
         List<Plan> planList = planService.getPlanList(networkSupport);
 
-        logger.info(networkSupport + " plan list : " + planList.toString());
+        logger.debug(networkSupport + " plan list : " + planList.toString());
         if (planList.isEmpty()) {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
@@ -155,7 +162,7 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
 
-        PhoneSummaryDto phoneCompareDto = PhoneSummaryDto.builder()
+        PhoneRequestDto phoneRequestDto = PhoneRequestDto.builder()
                                                         .code(phoneCode)
                                                         .networkSupport(phoneInfo.getNetworkSupport())
                                                         .discountType(discountType)
@@ -163,14 +170,14 @@ public class ProductController {
                                                         .plan(planCode)
                                                         .build();
 
-        phoneService.saveRecentProducts(session.getId(), phoneCompareDto);
+        phoneService.saveRecentProducts(session.getId(), phoneRequestDto);
 
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
     }
 
     @PostMapping("/compare")
-    public ResponseMessage comparePhones(@RequestBody List<PhoneSummaryDto> compareList) {
+    public ResponseMessage comparePhones(@RequestBody List<PhoneRequestDto> compareList) {
         // TODO Handle Exception ...
         /**
          * 비교 정보 : model code, selected_plan,
@@ -182,7 +189,7 @@ public class ProductController {
 
         List<PhoneDetailDto> phoneDetailDtos = new ArrayList<>();
 
-        for (PhoneSummaryDto dto : compareList) {
+        for (PhoneRequestDto dto : compareList) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.equalPhoneCode(dto.getCode()));
 
@@ -190,6 +197,8 @@ public class ProductController {
             if (phoneInfo == null)
                 return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
+            // 선택한 할인 유형 값으로 바꾸어 리턴
+            phoneInfo.setDiscountType(dto.getDiscountType());
             Plan planInfo = planService.getPlanDetail(dto.getPlan());
             phoneDetailDtos.add(new PhoneDetailDto(phoneInfo,planInfo));
         }
@@ -201,7 +210,7 @@ public class ProductController {
     public ResponseMessage updateSales(@PathVariable("code") final String phoneCode,
                                        @PathVariable("color") final String phoneColor) {
         // TODO Handle Exception ...
-        logger.info("get product code : " + phoneCode);
+        logger.debug("get product code : " + phoneCode);
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
@@ -220,9 +229,9 @@ public class ProductController {
 
     @GetMapping("/recents")
     public ResponseMessage getRecentProducts(HttpSession session) {
-      List<PhoneSummaryDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
+      List<PhoneRequestDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
 
-      logger.info("recent products: " + phoneCompareDtos.size());
+      logger.debug("recent products: " + phoneCompareDtos.size());
       return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
     }
 
@@ -235,14 +244,17 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseMessage getSearchResults(@RequestParam(value = "ph_name") String phoneName) {
-        Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
-        spec = spec.and(ProductSpecification.likePhoneName(phoneName));
+    public ResponseMessage getSearchResults(@RequestParam(value = "word") String keyword) {
+        logger.debug("search word: " + keyword);
+        List<Phone> searchResults = searchService.getSearchResults(keyword);
 
-        List<Phone> searchResults = phoneService.getSearchResults(spec);
+        if (searchResults.isEmpty()) {
+            Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+            spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword));
+            spec = spec.or(ProductSpecification.likeCodeAsKeyword(keyword));
 
-        if (searchResults.isEmpty())
-            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+            searchResults = phoneService.getSearchResults(spec);
+        }
 
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SEARCH, searchResults);
     }

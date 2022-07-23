@@ -105,6 +105,7 @@ DROP TABLE IF EXISTS `productdb`.`phone_image` ;
 CREATE TABLE IF NOT EXISTS `productdb`.`phone_image` (
   `id` INT NOT NULL AUTO_INCREMENT,
   `phone_id` INT NOT NULL,
+  `img_color` VARCHAR(20) NOT NULL,
   `img_path` VARCHAR(255) NOT NULL,
   `img_name` VARCHAR(50) NOT NULL,
   `img_pos` VARCHAR(30) NOT NULL,
@@ -112,7 +113,7 @@ CREATE TABLE IF NOT EXISTS `productdb`.`phone_image` (
   `modify_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `is_deleted` TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
-  CONSTRAINT `unq_phone_image_on_img_name_and_img_pos` UNIQUE (`img_name`, `img_pos`),
+  CONSTRAINT `unq_phone_image_on_img_name_and_img_pos_and_img_color` UNIQUE (`img_name`, `img_pos`, `img_color`),
   INDEX `fk_phone_image_phone1_idx` (`phone_id` ASC),
   CONSTRAINT `fk_phone_image_phone1`
     FOREIGN KEY (`phone_id`)

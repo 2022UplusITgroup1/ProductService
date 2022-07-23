@@ -23,4 +23,8 @@ public class PlanService {
     public Plan getPlanDetail(String planCode) {
         return planRepository.findByCode(planCode);
     }
+
+    public Plan getPlanPrice(String planCode) {
+        return planRepository.findByCode(planCode);
+    }
 }
