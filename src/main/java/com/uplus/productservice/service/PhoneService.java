@@ -89,6 +89,11 @@ public class PhoneService {
       redisTemplate.expireAt(key, Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
     }
 
+    /**
+     * client session id에 따라 Redis에 저장된 최근 본 상품 리스트를 조회
+     * ZSet으로 저장하여 최근 본 순서와 중복을 제거함
+     *
+     */
     public List<PhoneRequestDto> getRecentProducts(String jSessionId) {
       ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
@@ -112,6 +117,9 @@ public class PhoneService {
         return searchResults;
     }
 
+    /**
+     * PhoneSummaryDto에 month price를 포함하여 반환한다.
+     */
     public List<PhoneSummaryDto> getPhoneSummary(List<Phone> phoneList, String planCode, int planPrice) {
         List<PhoneSummaryDto> phoneSummaryDtos = new ArrayList<>();
         for (Phone phone : phoneList) {

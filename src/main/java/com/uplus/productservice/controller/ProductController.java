@@ -148,12 +148,8 @@ public class ProductController {
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
                                               @RequestParam(value = "dc_type") Integer discountType) {
         // TODO Handle Exception ...
-        /*
-        * 상세 정보 : model code , name, color, images, capability,
-        *           price, selected_plan
-        * */
 
-        logger.info("sessionId = {}", session.getId());
+        logger.debug("sessionId = {}", session.getId());
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
         spec = spec.and(ProductSpecification.equalIsDeleted(0));
@@ -168,6 +164,7 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
 
+        // redis database에 저장하기 위한 dto 생성 - product detail 조회 시 생성된다
         PhoneRequestDto phoneRequestDto = PhoneRequestDto.builder()
                                                         .code(phoneCode)
                                                         .networkSupport(phoneInfo.getNetworkSupport())
@@ -256,6 +253,7 @@ public class ProductController {
         logger.debug("search word: " + keyword);
         List<Phone> searchResults = searchService.getSearchResults(keyword);
 
+        // full text index matching 싫패 시, like keyword% 으로 검색
         if (searchResults.isEmpty()) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword));
