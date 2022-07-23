@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class PhoneSummaryDto {
+public class PhoneRequestDto {
     private String code;
     private String networkSupport;
     private Integer discountType;

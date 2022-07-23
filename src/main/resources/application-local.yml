@@ -1,5 +1,6 @@
-server:
-  port: 64421
+logging:
+  level:
+    root: debug
 
 spring:
   datasource:
@@ -15,7 +16,7 @@ spring:
         show_sql: true
         format_sql: true
         search:
-          enabled : true
+          enabled: true
           backend:
             type: lucene
             directory.root: ./data/index
@@ -39,3 +40,8 @@ eureka:
 
 prefix:
   key: recents
+
+discount:
+  public: 30
+  select12: 25
+  select24: 25

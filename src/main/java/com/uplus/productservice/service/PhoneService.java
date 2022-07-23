@@ -1,6 +1,7 @@
 package com.uplus.productservice.service;
 
-import com.uplus.productservice.controller.request.PhoneSummaryDto;
+import com.uplus.productservice.controller.request.PhoneRequestDto;
+import com.uplus.productservice.controller.response.PhoneSummaryDto;
 import com.uplus.productservice.controller.response.StatusMessage;
 import com.uplus.productservice.domain.phone.Color;
 import com.uplus.productservice.domain.phone.Images;
@@ -38,10 +39,19 @@ public class PhoneService {
     @Value("${prefix.key}")
     private String REDIS_PREFIX_KEY;
 
+    @Value("${discount.public}")
+    private Integer DISCOUNT_PUBLIC;
+
+    @Value("${discount.select12}")
+    private Integer DISCOUNT_SELECT_12;
+
+    @Value("${discount.select24}")
+    private Integer DISCOUNT_SELECT_24;
+
     private final PhoneRepository phoneRepository;
     private final ImageRepository imageRepository;
 
-    private final RedisTemplate<String, PhoneSummaryDto> redisTemplate;
+    private final RedisTemplate<String, PhoneRequestDto> redisTemplate;
     public List<Phone> getPhoneList(Specification<Phone> spec, String orderColumnName, int direction) {
         return phoneRepository.findAll(spec, Sort.by(direction > 0 ? Sort.Direction.DESC : Sort.Direction.ASC, orderColumnName));
     }
@@ -70,8 +80,8 @@ public class PhoneService {
     }
 
     @Transactional
-    public void saveRecentProducts(String jSessionId, PhoneSummaryDto phoneCompareDto) {
-      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
+    public void saveRecentProducts(String jSessionId, PhoneRequestDto phoneCompareDto) {
+      ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
       final long score = Instant.now().toEpochMilli();
 
@@ -79,8 +89,8 @@ public class PhoneService {
       redisTemplate.expireAt(key, Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
     }
 
-    public List<PhoneSummaryDto> getRecentProducts(String jSessionId) {
-      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
+    public List<PhoneRequestDto> getRecentProducts(String jSessionId) {
+      ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
 
       if (zSetOperations.size(key) == 0)
@@ -105,5 +115,47 @@ public class PhoneService {
         if (searchResults.isEmpty())
             throw new NoAvailableItemException("알맞은 결과를 찾을 수 없습니다");
         return searchResults;
+    }
+
+    public List<PhoneSummaryDto> getPhoneSummary(List<Phone> phoneList, String planCode, int planPrice) {
+        List<PhoneSummaryDto> phoneSummaryDtos = new ArrayList<>();
+        for (Phone phone : phoneList) {
+            PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(
+                    phone, planCode, calcMonthPrice(phone.getPrice(), planPrice, phone.getDiscountType()));
+            phoneSummaryDtos.add(phoneSummaryDto);
+        }
+        return phoneSummaryDtos;
+    }
+
+    public int calcMonthPrice(int phonePrice, int planPrice, int discountType) {
+        /**
+         * 결과는 1의 자리에서 버림
+         * 할인유형&요금제에 따른 월별 요금 계산 ( 정상가, 공시지원금, 선택약정 )
+         * 1 : 공시지원금
+         * 2 : 선택약정 12개월
+         * 3 : 선택약정 24개월
+         *
+         */
+        double monPrice;
+        switch (discountType) {
+            case 1: {
+                monPrice = ((double)phonePrice * (1-((double)DISCOUNT_PUBLIC / 100))) / 24; // 보통 24개월 계약함을 가정
+                monPrice += planPrice;
+                return (int) (monPrice - (monPrice % 10));
+            }
+            case 2: {
+                monPrice = (double)planPrice * (1-((double)DISCOUNT_SELECT_12 / 100));
+                monPrice += (double)phonePrice / 12;
+                return (int) (monPrice - (monPrice % 10));
+            }
+            case 3: {
+                monPrice = (double)planPrice * (1-((double)DISCOUNT_SELECT_24 / 100));
+                monPrice += (double)phonePrice / 24;
+                return (int) (monPrice - (monPrice % 10));
+            }
+            default:
+                break;
+        }
+        return 0;
     }
 }

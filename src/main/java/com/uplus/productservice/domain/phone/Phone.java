@@ -21,7 +21,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString
 @Table(name = "phone")
-
 @Indexed
 public class Phone {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
