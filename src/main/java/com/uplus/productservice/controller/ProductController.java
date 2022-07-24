@@ -197,6 +197,7 @@ public class ProductController {
         for (PhoneRequestDto dto : compareList) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.equalPhoneCode(dto.getCode()));
+            spec = spec.and(ProductSpecification.equalPhoneColor(dto.getColor()));
 
             Phone phoneInfo = phoneService.getPhoneDetail(spec);
             if (phoneInfo == null)
