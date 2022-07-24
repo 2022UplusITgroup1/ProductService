@@ -2,6 +2,7 @@ package com.uplus.productservice.controller;
 
 import com.uplus.productservice.controller.request.PhoneRequestDto;
 import com.uplus.productservice.controller.response.*;
+import com.uplus.productservice.domain.phone.Color;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.plan.Plan;
 import com.uplus.productservice.domain.phone.Phone;
@@ -11,6 +12,7 @@ import com.uplus.productservice.service.PhoneService;
 import com.uplus.productservice.service.PlanService;
 import com.uplus.productservice.service.SearchService;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
@@ -20,7 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
@@ -39,7 +42,7 @@ public class ProductController {
     public ResponseMessage getPhoneList(@RequestParam(value = "net_sp") final String networkSupport,
                                         @RequestParam(value = "mf_name", required = false) final Optional<Integer> brandId,
                                         @RequestParam(value = "capa", required = false) final Optional<Integer> capability,
-                                        @RequestParam(value = "plan", defaultValue = "LUP0001") final String planCode,
+                                        @RequestParam(value = "plan", required = false) final Optional<String> planCode,
                                         @RequestParam(value = "ord", required = false) final Optional<Integer> orders) {
         // TODO Handle Exception ...
 
@@ -114,19 +117,24 @@ public class ProductController {
         }
 
         // 요금제와 할인 유형에 따라 월 요금 계산
-        Plan plan = planService.getPlanPrice(planCode);
+        // 요금제 코드가 정의되지 않는 경우 network support 값에 따라 default plan code 를 사용
+        Plan plan = null;
+        if (planCode.isPresent())
+            plan = planService.getPlanPriceByCode(planCode.get().toString());
+        else
+            plan = planService.getPlanPriceByNetworkSupport(networkSupport.toUpperCase());
+
         if (plan == null)
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
-        List<PhoneSummaryDto> phoneSummaryDtos = phoneService.getPhoneSummary(phoneList, planCode, plan.getPrice());
-
+        List<PhoneSummaryDto> phoneSummaryDtos = phoneService.getPhoneSummary(phoneList, plan.getCode(), plan.getPrice());
+        logger.debug(networkSupport + " summary phone list : " + phoneSummaryDtos.toString());
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneSummaryDtos);
     }
 
     @GetMapping("/plan")
-    public ResponseMessage getPlanList(@RequestParam(value = "net_sp") final String networkSupport,
-                                       @RequestParam(value = "pl_code", required = false) String planCode) {
+    public ResponseMessage getPlanList(@RequestParam(value = "net_sp") final String networkSupport) {
         // TODO Handle Exception ...
-        List<Plan> planList = planService.getPlanList(networkSupport);
+        List<Plan> planList = planService.getPlanList(networkSupport.toUpperCase());
 
         logger.debug(networkSupport + " plan list : " + planList.toString());
         if (planList.isEmpty()) {
@@ -136,18 +144,26 @@ public class ProductController {
     }
 
     @GetMapping("/detail")
-    public ResponseMessage getPhoneDetailInfo(HttpSession session,
+    public ResponseMessage getPhoneDetailInfo(@CookieValue(value = "JSESSIONID", required = false) String jSessionId,
+                                              HttpServletResponse response,
                                               @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
                                               @RequestParam(value = "dc_type") Integer discountType) {
         // TODO Handle Exception ...
-        /*
-        * 상세 정보 : model code , name, color, images, capability,
-        *           price, selected_plan
-        * */
+        /**
+         * 최근 본 상품은 redis에 저장된다.
+         * redis data의 key는 JSessionId.
+         * cookie 에 JSessionId가 없으면 생성하고, 있으면 해당 key 에 데이터를 저장한다.
+         */
+        if (jSessionId == null) {
+            jSessionId = RandomStringUtils.random(12, true, true);
+            Cookie cookie = new Cookie("JSESSIONID", jSessionId);
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60 * 24 * 1);
+            response.addCookie(cookie);
+        }
 
-        logger.info("sessionId = {}", session.getId());
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
         spec = spec.and(ProductSpecification.equalIsDeleted(0));
@@ -162,16 +178,15 @@ public class ProductController {
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         }
 
-        PhoneRequestDto phoneRequestDto = PhoneRequestDto.builder()
-                                                        .code(phoneCode)
-                                                        .networkSupport(phoneInfo.getNetworkSupport())
-                                                        .discountType(discountType)
-                                                        .color(phoneInfo.getColor())
-                                                        .plan(planCode)
-                                                        .build();
+        // redis database에 저장하기 위한 dto 생성 - product detail 조회 시 생성된다
+        int monPrice = phoneService.calcMonthPrice(phoneInfo.getPrice(), planInfo.getPrice(), discountType);
+        PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, monPrice);
 
-        phoneService.saveRecentProducts(session.getId(), phoneRequestDto);
+        logger.debug("JSESSIONID = {}", jSessionId);
+        phoneService.saveRecentProducts(jSessionId, phoneSummaryDto);
 
+        // 선택한 할인 유형 값으로 바꾸어 리턴
+        phoneInfo.setDiscountType(discountType);
         PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
     }
@@ -192,8 +207,10 @@ public class ProductController {
         for (PhoneRequestDto dto : compareList) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.equalPhoneCode(dto.getCode()));
+            spec = spec.and(ProductSpecification.equalPhoneColor(dto.getColor()));
 
             Phone phoneInfo = phoneService.getPhoneDetail(spec);
+
             if (phoneInfo == null)
                 return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
@@ -228,16 +245,21 @@ public class ProductController {
     }
 
     @GetMapping("/recents")
-    public ResponseMessage getRecentProducts(HttpSession session) {
-      List<PhoneRequestDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
+    public ResponseMessage getRecentProducts(@CookieValue(value = "JSESSIONID", required = false) final Optional<String> jSessionId) {
 
-      logger.debug("recent products: " + phoneCompareDtos.size());
-      return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
+        if (!jSessionId.isPresent())
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+
+        logger.debug("JSESSIONID = {}", jSessionId);
+        List<PhoneSummaryDto> phoneCachedRecents = phoneService.getRecentProducts(jSessionId.get().toString());
+
+        logger.debug("recent products: " + phoneCachedRecents.size());
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCachedRecents);
     }
 
     @GetMapping("/color")
     public ResponseMessage getPhoneColor(@RequestParam(value = "ph_code") String phoneCode) {
-        List<String> phoneColorList = phoneService.getPhoneColors(phoneCode);
+        List<Color> phoneColorList = phoneService.getPhoneColors(phoneCode);
         if (phoneColorList.isEmpty())
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_COLOR, phoneColorList);
@@ -248,6 +270,7 @@ public class ProductController {
         logger.debug("search word: " + keyword);
         List<Phone> searchResults = searchService.getSearchResults(keyword);
 
+        // full text index matching 싫패 시, like keyword% 으로 검색
         if (searchResults.isEmpty()) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
             spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword));

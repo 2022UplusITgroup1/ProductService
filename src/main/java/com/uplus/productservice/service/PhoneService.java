@@ -51,7 +51,7 @@ public class PhoneService {
     private final PhoneRepository phoneRepository;
     private final ImageRepository imageRepository;
 
-    private final RedisTemplate<String, PhoneRequestDto> redisTemplate;
+    private final RedisTemplate<String, PhoneSummaryDto> redisTemplate;
     public List<Phone> getPhoneList(Specification<Phone> spec, String orderColumnName, int direction) {
         return phoneRepository.findAll(spec, Sort.by(direction > 0 ? Sort.Direction.DESC : Sort.Direction.ASC, orderColumnName));
     }
@@ -80,17 +80,22 @@ public class PhoneService {
     }
 
     @Transactional
-    public void saveRecentProducts(String jSessionId, PhoneRequestDto phoneCompareDto) {
-      ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
+    public void saveRecentProducts(String jSessionId, PhoneSummaryDto phoneSummaryDto) {
+      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
       final long score = Instant.now().toEpochMilli();
 
-      if (zSetOperations.add(key, phoneCompareDto, score)) return;
+      if (zSetOperations.add(key, phoneSummaryDto, score)) return;
       redisTemplate.expireAt(key, Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
     }
 
-    public List<PhoneRequestDto> getRecentProducts(String jSessionId) {
-      ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
+    /**
+     * client session id에 따라 Redis에 저장된 최근 본 상품 리스트를 조회
+     * ZSet으로 저장하여 최근 본 순서와 중복을 제거함
+     *
+     */
+    public List<PhoneSummaryDto> getRecentProducts(String jSessionId) {
+      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
 
       if (zSetOperations.size(key) == 0)
@@ -98,16 +103,11 @@ public class PhoneService {
       return new ArrayList<>(zSetOperations.reverseRange(key, 0, -1));
     }
 
-    public List<String> getPhoneColors(String phoneCode) {
+    public List<Color> getPhoneColors(String phoneCode) {
         List<Color> colors = phoneRepository.findColorByCode(phoneCode);
         if (colors.isEmpty())
             throw new NoAvailableItemException("색상이 존재하지 않습니다.");
-
-        List<String> colorList = new ArrayList<>();
-        for (Color co : colors) {
-            colorList.add(co.getColor());
-        }
-        return colorList;
+        return colors;
     }
 
     public List<Phone> getSearchResults(Specification<Phone> spec) {
@@ -117,6 +117,9 @@ public class PhoneService {
         return searchResults;
     }
 
+    /**
+     * PhoneSummaryDto에 month price를 포함하여 반환한다.
+     */
     public List<PhoneSummaryDto> getPhoneSummary(List<Phone> phoneList, String planCode, int planPrice) {
         List<PhoneSummaryDto> phoneSummaryDtos = new ArrayList<>();
         for (Phone phone : phoneList) {

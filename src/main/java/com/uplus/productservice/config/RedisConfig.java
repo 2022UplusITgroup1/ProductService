@@ -1,5 +1,9 @@
 package com.uplus.productservice.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,6 +28,14 @@ public class RedisConfig {
     private int redisPort;
 
     @Bean
+    public ObjectMapper objectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS); // timestamp 형식 안따르도록 설정
+        mapper.registerModules(new JavaTimeModule(), new Jdk8Module()); // LocalDateTime 매핑
+        return mapper;
+    }
+
+    @Bean
     public RedisConnectionFactory redisConnectionFactory() {
       return new LettuceConnectionFactory(redisHost, redisPort);
     }
@@ -34,7 +46,7 @@ public class RedisConfig {
       redisTemplate.setConnectionFactory(redisConnectionFactory());
       redisTemplate.setKeySerializer(new StringRedisSerializer());
       redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-      redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
+      redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper()));
 
       return redisTemplate;
     }
