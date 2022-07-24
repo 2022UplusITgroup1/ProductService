@@ -51,7 +51,7 @@ public class PhoneService {
     private final PhoneRepository phoneRepository;
     private final ImageRepository imageRepository;
 
-    private final RedisTemplate<String, PhoneRequestDto> redisTemplate;
+    private final RedisTemplate<String, PhoneSummaryDto> redisTemplate;
     public List<Phone> getPhoneList(Specification<Phone> spec, String orderColumnName, int direction) {
         return phoneRepository.findAll(spec, Sort.by(direction > 0 ? Sort.Direction.DESC : Sort.Direction.ASC, orderColumnName));
     }
@@ -80,12 +80,12 @@ public class PhoneService {
     }
 
     @Transactional
-    public void saveRecentProducts(String jSessionId, PhoneRequestDto phoneCompareDto) {
-      ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
+    public void saveRecentProducts(String jSessionId, PhoneSummaryDto phoneSummaryDto) {
+      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
       final long score = Instant.now().toEpochMilli();
 
-      if (zSetOperations.add(key, phoneCompareDto, score)) return;
+      if (zSetOperations.add(key, phoneSummaryDto, score)) return;
       redisTemplate.expireAt(key, Date.from(ZonedDateTime.now().plusDays(1).toInstant()));
     }
 
@@ -94,8 +94,8 @@ public class PhoneService {
      * ZSet으로 저장하여 최근 본 순서와 중복을 제거함
      *
      */
-    public List<PhoneRequestDto> getRecentProducts(String jSessionId) {
-      ZSetOperations<String, PhoneRequestDto> zSetOperations = redisTemplate.opsForZSet();
+    public List<PhoneSummaryDto> getRecentProducts(String jSessionId) {
+      ZSetOperations<String, PhoneSummaryDto> zSetOperations = redisTemplate.opsForZSet();
       String key = REDIS_PREFIX_KEY + "::" + jSessionId;
 
       if (zSetOperations.size(key) == 0)

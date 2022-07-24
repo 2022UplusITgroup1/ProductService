@@ -165,15 +165,10 @@ public class ProductController {
         }
 
         // redis database에 저장하기 위한 dto 생성 - product detail 조회 시 생성된다
-        PhoneRequestDto phoneRequestDto = PhoneRequestDto.builder()
-                                                        .code(phoneCode)
-                                                        .networkSupport(phoneInfo.getNetworkSupport())
-                                                        .discountType(discountType)
-                                                        .color(phoneInfo.getColor())
-                                                        .plan(planCode)
-                                                        .build();
+        int monPrice = phoneService.calcMonthPrice(phoneInfo.getPrice(), planInfo.getPrice(), discountType);
+        PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, monPrice);
 
-        phoneService.saveRecentProducts(session.getId(), phoneRequestDto);
+        phoneService.saveRecentProducts(session.getId(), phoneSummaryDto);
 
         // 선택한 할인 유형 값으로 바꾸어 리턴
         phoneInfo.setDiscountType(discountType);
@@ -200,6 +195,7 @@ public class ProductController {
             spec = spec.and(ProductSpecification.equalPhoneColor(dto.getColor()));
 
             Phone phoneInfo = phoneService.getPhoneDetail(spec);
+
             if (phoneInfo == null)
                 return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
 
@@ -235,10 +231,10 @@ public class ProductController {
 
     @GetMapping("/recents")
     public ResponseMessage getRecentProducts(HttpSession session) {
-      List<PhoneRequestDto> phoneCompareDtos = phoneService.getRecentProducts(session.getId());
+      List<PhoneSummaryDto> phoneCachedRecents = phoneService.getRecentProducts(session.getId());
 
-      logger.debug("recent products: " + phoneCompareDtos.size());
-      return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCompareDtos);
+      logger.debug("recent products: " + phoneCachedRecents.size());
+      return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCachedRecents);
     }
 
     @GetMapping("/color")
