@@ -12,6 +12,7 @@ import com.uplus.productservice.service.PhoneService;
 import com.uplus.productservice.service.PlanService;
 import com.uplus.productservice.service.SearchService;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang.RandomStringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.jpa.domain.Specification;
@@ -21,7 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
@@ -142,14 +144,26 @@ public class ProductController {
     }
 
     @GetMapping("/detail")
-    public ResponseMessage getPhoneDetailInfo(HttpSession session,
+    public ResponseMessage getPhoneDetailInfo(@CookieValue(value = "JSESSIONID", required = false) String jSessionId,
+                                              HttpServletResponse response,
                                               @RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
                                               @RequestParam(value = "dc_type") Integer discountType) {
         // TODO Handle Exception ...
+        /**
+         * 최근 본 상품은 redis에 저장된다.
+         * redis data의 key는 JSessionId.
+         * cookie 에 JSessionId가 없으면 생성하고, 있으면 해당 key 에 데이터를 저장한다.
+         */
+        if (jSessionId == null) {
+            jSessionId = RandomStringUtils.random(12, true, true);
+            Cookie cookie = new Cookie("JSESSIONID", jSessionId);
+            cookie.setPath("/");
+            cookie.setMaxAge(60 * 60 * 24 * 1);
+            response.addCookie(cookie);
+        }
 
-        logger.debug("sessionId = {}", session.getId());
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
         spec = spec.and(ProductSpecification.equalPhoneCode(phoneCode));
         spec = spec.and(ProductSpecification.equalIsDeleted(0));
@@ -168,7 +182,8 @@ public class ProductController {
         int monPrice = phoneService.calcMonthPrice(phoneInfo.getPrice(), planInfo.getPrice(), discountType);
         PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, monPrice);
 
-        phoneService.saveRecentProducts(session.getId(), phoneSummaryDto);
+        logger.debug("JSESSIONID = {}", jSessionId);
+        phoneService.saveRecentProducts(jSessionId, phoneSummaryDto);
 
         // 선택한 할인 유형 값으로 바꾸어 리턴
         phoneInfo.setDiscountType(discountType);
@@ -230,11 +245,16 @@ public class ProductController {
     }
 
     @GetMapping("/recents")
-    public ResponseMessage getRecentProducts(HttpSession session) {
-      List<PhoneSummaryDto> phoneCachedRecents = phoneService.getRecentProducts(session.getId());
+    public ResponseMessage getRecentProducts(@CookieValue(value = "JSESSIONID", required = false) final Optional<String> jSessionId) {
 
-      logger.debug("recent products: " + phoneCachedRecents.size());
-      return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCachedRecents);
+        if (!jSessionId.isPresent())
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+
+        logger.debug("JSESSIONID = {}", jSessionId);
+        List<PhoneSummaryDto> phoneCachedRecents = phoneService.getRecentProducts(jSessionId.get().toString());
+
+        logger.debug("recent products: " + phoneCachedRecents.size());
+        return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_SUMMARY, phoneCachedRecents);
     }
 
     @GetMapping("/color")
