@@ -180,7 +180,7 @@ public class ProductController {
 
         // redis database에 저장하기 위한 dto 생성 - product detail 조회 시 생성된다
         int monPrice = phoneService.calcMonthPrice(phoneInfo.getPrice(), planInfo.getPrice(), discountType);
-        PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, monPrice);
+        PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, planInfo.getName(), planInfo.getPrice(), monPrice);
 
         logger.debug("JSESSIONID = {}", jSessionId);
         phoneService.saveRecentProducts(jSessionId, phoneSummaryDto);

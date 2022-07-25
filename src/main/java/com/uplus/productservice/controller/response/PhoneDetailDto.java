@@ -1,5 +1,6 @@
 package com.uplus.productservice.controller.response;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.uplus.productservice.domain.phone.Images;
 import com.uplus.productservice.domain.phone.Phone;
 import com.uplus.productservice.domain.plan.Plan;
@@ -16,6 +17,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PhoneDetailDto {
     private Phone phone;
     private Plan plan;
