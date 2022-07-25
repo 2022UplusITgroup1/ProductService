@@ -135,8 +135,8 @@ public class PhoneService {
          * 결과는 1의 자리에서 버림
          * 할인유형&요금제에 따른 월별 요금 계산 ( 정상가, 공시지원금, 선택약정 )
          * 1 : 공시지원금
-         * 2 : 선택약정 12개월
-         * 3 : 선택약정 24개월
+         * 2 : 선택약정 24개월
+         * 3 : 선택약정 12개월
          *
          */
         double monPrice;
@@ -148,12 +148,12 @@ public class PhoneService {
             }
             case 2: {
                 monPrice = (double)planPrice * (1-((double)DISCOUNT_SELECT_12 / 100));
-                monPrice += (double)phonePrice / 12;
+                monPrice += (double)phonePrice / 24;
                 return (int) (monPrice - (monPrice % 10));
             }
             case 3: {
                 monPrice = (double)planPrice * (1-((double)DISCOUNT_SELECT_24 / 100));
-                monPrice += (double)phonePrice / 24;
+                monPrice += (double)phonePrice / 12;
                 return (int) (monPrice - (monPrice % 10));
             }
             default:
