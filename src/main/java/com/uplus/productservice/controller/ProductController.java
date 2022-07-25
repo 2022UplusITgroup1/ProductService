@@ -271,13 +271,14 @@ public class ProductController {
     @GetMapping("/search")
     public ResponseMessage getSearchResults(@RequestParam(value = "word") String keyword) {
         logger.debug("search word: " + keyword);
-        List<Phone> searchResults = searchService.getSearchResults(keyword);
+
+        List<Phone> searchResults = searchService.getSearchResults(keyword.trim());
 
         // full text index matching 싫패 시, like keyword% 으로 검색
         if (searchResults.isEmpty()) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
-            spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword));
-            spec = spec.or(ProductSpecification.likeCodeAsKeyword(keyword));
+            spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword.trim()));
+            spec = spec.or(ProductSpecification.likeCodeAsKeyword(keyword.trim()));
 
             searchResults = phoneService.getSearchResults(spec);
         }
