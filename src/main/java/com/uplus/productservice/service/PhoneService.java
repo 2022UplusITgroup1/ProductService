@@ -142,19 +142,16 @@ public class PhoneService {
         double monPrice;
         switch (discountType) {
             case 1: {
-                monPrice = ((double)phonePrice * (1-((double)DISCOUNT_PUBLIC / 100))) / 24; // 보통 24개월 계약함을 가정
-                monPrice += planPrice;
-                return (int) (monPrice - (monPrice % 10));
+                phonePrice = (phonePrice - (int) (Math.floor((phonePrice * DISCOUNT_PUBLIC/100)/10))*10);
+                return (int) Math.floor((phonePrice/24)/10)*10 + planPrice;
             }
             case 2: {
-                monPrice = (double)planPrice * (1-((double)DISCOUNT_SELECT_12 / 100));
-                monPrice += (double)phonePrice / 24;
-                return (int) (monPrice - (monPrice % 10));
+                planPrice= (planPrice - (int) (Math.floor((planPrice * DISCOUNT_SELECT_24/100)/10))*10);
+                return (int) Math.floor((phonePrice/24)/10)*10 + planPrice;
             }
             case 3: {
-                monPrice = (double)planPrice * (1-((double)DISCOUNT_SELECT_24 / 100));
-                monPrice += (double)phonePrice / 12;
-                return (int) (monPrice - (monPrice % 10));
+                planPrice= (planPrice - (int) (Math.floor((planPrice * DISCOUNT_SELECT_12/100)/10))*10);
+                return (int) Math.floor((phonePrice/24)/10)*10 + planPrice;
             }
             default:
                 break;
