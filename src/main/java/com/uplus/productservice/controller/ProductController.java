@@ -69,7 +69,7 @@ public class ProductController {
         spec = spec.and(ProductSpecification.equalIsDeleted(0));
 
         String orderColumnName = "createTime";
-        int direction = 0; // ACS = 0 , DESC = 1
+        int direction = 1; // ACS = 0 , DESC = 1
         if (orders.isPresent()) {
             /**
              * 모바일 상품 리스트 정렬
@@ -171,6 +171,9 @@ public class ProductController {
             spec = spec.and(ProductSpecification.equalPhoneColor(color.get().toString()));
 
         Phone phoneInfo = phoneService.getPhoneDetail(spec);
+        if (phoneInfo == null)
+            return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);
+
         Plan planInfo = planService.getPlanDetail(planCode);
         List<Images> imagesList = phoneService.getPhoneImageList(phoneInfo.getId(), color);
 
@@ -180,7 +183,7 @@ public class ProductController {
 
         // redis database에 저장하기 위한 dto 생성 - product detail 조회 시 생성된다
         int monPrice = phoneService.calcMonthPrice(phoneInfo.getPrice(), planInfo.getPrice(), discountType);
-        PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, monPrice);
+        PhoneSummaryDto phoneSummaryDto = new PhoneSummaryDto(phoneInfo, planCode, planInfo.getName(), planInfo.getPrice(), monPrice);
 
         logger.debug("JSESSIONID = {}", jSessionId);
         phoneService.saveRecentProducts(jSessionId, phoneSummaryDto);
