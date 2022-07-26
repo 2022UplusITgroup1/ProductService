@@ -43,7 +43,7 @@ public class SearchService {
         Stream<Phone> filterWithColor = phoneSearchResult.stream()
                       .filter(phone -> phone.getColor().contains(keyword));
 
-        Stream<Phone> NameAndCode = Stream.concat(filterWithName, filterWithCode);
+        Stream<Phone> NameAndCode = Stream.concat(filterWithName, filterWithCode).distinct();
 
         return Stream.concat(NameAndCode, filterWithColor)
               .distinct()
