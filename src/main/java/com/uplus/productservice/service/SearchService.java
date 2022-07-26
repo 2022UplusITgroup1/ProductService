@@ -8,8 +8,9 @@ import org.hibernate.search.mapper.orm.session.SearchSession;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -21,16 +22,31 @@ public class SearchService {
      */
     public List<Phone> getSearchResults(String keyword) {
         SearchSession searchSession = Search.session(entityManager);
-        SearchResult<Phone> result = searchSession.search(Phone.class)
+        SearchResult<Phone> results = searchSession.search(Phone.class)
                 .where(f -> f.match()
                         .fields("code")
                         .fields("name")
+                        .fields("color")
                         .matching("*"+keyword+"*"))
                 .fetch(10);
 
-        long totalHitCount = result.total().hitCount();
-        List<Phone> hits = result.hits();
+        List<Phone> phoneSearchResult = results.hits();
+        // return phoneSearchResult;
 
-        return hits;
+        // 검색어 범위 좁히기 -> stream filter사용
+        Stream<Phone> filterWithName = phoneSearchResult.stream()
+                      .filter(phone -> phone.getName().contains(keyword));
+
+        Stream<Phone> filterWithCode = phoneSearchResult.stream()
+                      .filter(phone -> phone.getCode().contains(keyword));
+
+        Stream<Phone> filterWithColor = phoneSearchResult.stream()
+                      .filter(phone -> phone.getColor().contains(keyword));
+
+        Stream<Phone> NameAndCode = Stream.concat(filterWithName, filterWithCode).distinct();
+
+        return Stream.concat(NameAndCode, filterWithColor)
+              .distinct()
+              .collect(Collectors.toList());
     }
 }

@@ -6,6 +6,7 @@ import com.uplus.productservice.domain.TimeStamp;
 import lombok.*;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.FullTextField;
 import org.hibernate.search.mapper.pojo.mapping.definition.annotation.Indexed;
+import org.hibernate.search.mapper.pojo.mapping.definition.annotation.KeywordField;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -40,7 +41,7 @@ public class Phone {
 
     @NotNull
     @Column(name = "code")
-    @FullTextField()
+    @KeywordField()
     private String code;
 
     @NotNull
@@ -62,6 +63,7 @@ public class Phone {
 
     @NotNull
     @Column(name = "color")
+    @FullTextField()
     private String color;
 
     @NotNull
