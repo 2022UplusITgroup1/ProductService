@@ -270,6 +270,7 @@ public class ProductController {
         // full text index matching 싫패 시, like keyword% 으로 검색
         if (searchResults.isEmpty()) {
             Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
+            spec = spec.and(ProductSpecification.equalIsDeleted(0));
             spec = spec.and(ProductSpecification.likeNameAsKeyword(keyword.trim()));
             spec = spec.or(ProductSpecification.likeCodeAsKeyword(keyword.trim()));
 
