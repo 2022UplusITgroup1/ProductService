@@ -20,7 +20,7 @@ spring:
             type: lucene
             directory.root: ./data/index
   redis:
-    host: redis
+    host: 10.100.34.56
     port: 6379
 
 eureka:
