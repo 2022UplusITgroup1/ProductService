@@ -22,8 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletResponse;
 
 ////////////////////////////////////
 // Create Date: 2022.07.14        //
@@ -144,12 +142,11 @@ public class ProductController {
     }
 
     @GetMapping("/detail")
-    public ResponseMessage getPhoneDetailInfo(@CookieValue(value = "JSESSIONID", required = false) String jSessionId,
-                                              HttpServletResponse response,
-                                              @RequestParam(value = "pl_code") String planCode,
+    public ResponseMessage getPhoneDetailInfo(@RequestParam(value = "pl_code") String planCode,
                                               @RequestParam(value = "ph_code") String phoneCode,
                                               @RequestParam(value = "color", required = false) final Optional<String> color,
-                                              @RequestParam(value = "dc_type") Integer discountType) {
+                                              @RequestParam(value = "dc_type") Integer discountType,
+                                              @RequestParam(value = "s_id", required = false) String jSessionId) {
         // TODO Handle Exception ...
         /**
          * 최근 본 상품은 redis에 저장된다.
@@ -158,10 +155,6 @@ public class ProductController {
          */
         if (jSessionId == null) {
             jSessionId = RandomStringUtils.random(12, true, true);
-            Cookie cookie = new Cookie("JSESSIONID", jSessionId);
-            cookie.setPath("/");
-            cookie.setMaxAge(60 * 60 * 24 * 1);
-            response.addCookie(cookie);
         }
 
         Specification<Phone> spec = (root, query, criteriaBuilder) -> null;
@@ -190,7 +183,7 @@ public class ProductController {
 
         // 선택한 할인 유형 값으로 바꾸어 리턴
         phoneInfo.setDiscountType(discountType);
-        PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList);
+        PhoneDetailDto phoneDetailDto = new PhoneDetailDto(phoneInfo, planInfo, imagesList, jSessionId);
         return ResponseMessage.res(StatusCode.OK, StatusMessage.READ_PRODUCT_DETAIL, phoneDetailDto);
     }
 
@@ -248,7 +241,7 @@ public class ProductController {
     }
 
     @GetMapping("/recents")
-    public ResponseMessage getRecentProducts(@CookieValue(value = "JSESSIONID", required = false) final Optional<String> jSessionId) {
+    public ResponseMessage getRecentProducts(@RequestParam(value = "s_id", required = false) final Optional<String> jSessionId) {
 
         if (!jSessionId.isPresent())
             return ResponseMessage.res(StatusCode.NO_CONTENT, StatusMessage.NOT_FOUND_PRODUCT);

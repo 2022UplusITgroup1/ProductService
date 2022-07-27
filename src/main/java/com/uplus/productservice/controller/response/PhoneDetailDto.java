@@ -22,6 +22,7 @@ public class PhoneDetailDto {
     private Phone phone;
     private Plan plan;
     private List<Images> images;
+    private String jSessionId;
 
     public PhoneDetailDto(Phone phone, Plan plan) {
         this.phone = phone;
